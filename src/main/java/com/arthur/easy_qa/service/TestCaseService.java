@@ -6,7 +6,6 @@ import com.arthur.easy_qa.dto.TestCaseResponse;
 import com.arthur.easy_qa.repository.TestCaseRepository;
 import org.springframework.stereotype.Service;
 
-import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -21,20 +20,14 @@ public class TestCaseService {
     }
 
     public TestCaseResponse create(CreateTestCaseRequest request) {
-        UUID id = UUID.randomUUID();
-        Instant now = Instant.now();
-
         TestCase testCase = new TestCase(
-                id,
                 request.getUs(),
                 request.getStatus(),
                 request.getFeature(),
                 request.getScenario(),
                 request.getDescription(),
                 request.getPriority(),
-                request.getType(),
-                now,
-                now
+                request.getType()
         );
 
         repository.save(testCase);
@@ -62,7 +55,7 @@ public class TestCaseService {
                     existing.setDescription(request.getDescription());
                     existing.setPriority(request.getPriority());
                     existing.setType(request.getType());
-                    existing.setLastUpdateInstant(Instant.now());
+
                     repository.save(existing);
                     return toResponse(existing);
                 });

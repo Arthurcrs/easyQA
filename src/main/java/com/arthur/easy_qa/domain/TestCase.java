@@ -1,6 +1,7 @@
 package com.arthur.easy_qa.domain;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.UuidGenerator;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -11,7 +12,8 @@ public class TestCase {
 
     @Id
     @GeneratedValue
-    private final UUID id;
+    @UuidGenerator
+    private UUID id;
 
     private String us;
     private String feature;
@@ -27,20 +29,21 @@ public class TestCase {
     @Enumerated(EnumType.STRING)
     private TestCaseType type;
 
-    private final Instant creationInstant;
+    private Instant creationInstant;
     private Instant lastUpdateInstant;
 
-    public TestCase(UUID id,
-                    String us,
-                    TestCaseStatus status,
-                    String feature,
-                    String scenario,
-                    String description,
-                    TestCasePriority priority,
-                    TestCaseType type,
-                    Instant creationInstant,
-                    Instant lastUpdateInstant) {
-        this.id = id;
+    protected TestCase(UUID uuid, String usName, TestCaseStatus finished, String featureName, String scenario, String description, TestCasePriority high, TestCaseType functional, Instant now, Instant nowed) {
+    }
+
+    public TestCase(
+            String us,
+            TestCaseStatus status,
+            String feature,
+            String scenario,
+            String description,
+            TestCasePriority priority,
+            TestCaseType type
+    ) {
         this.us = us;
         this.status = status;
         this.feature = feature;
@@ -48,8 +51,18 @@ public class TestCase {
         this.description = description;
         this.priority = priority;
         this.type = type;
-        this.creationInstant = creationInstant;
-        this.lastUpdateInstant = lastUpdateInstant;
+    }
+
+    @PrePersist
+    void onCreate() {
+        Instant now = Instant.now();
+        this.creationInstant = now;
+        this.lastUpdateInstant = now;
+    }
+
+    @PreUpdate
+    void onUpdate() {
+        this.lastUpdateInstant = Instant.now();
     }
 
     public UUID getId() {
@@ -118,9 +131,5 @@ public class TestCase {
 
     public Instant getLastUpdateInstant() {
         return lastUpdateInstant;
-    }
-
-    public void setLastUpdateInstant(Instant lastUpdateInstant) {
-        this.lastUpdateInstant = lastUpdateInstant;
     }
 }
