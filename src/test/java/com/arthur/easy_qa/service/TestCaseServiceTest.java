@@ -180,6 +180,7 @@ class TestCaseServiceTest {
     @Test
     void getAll_shouldReturnMappedList() {
         //Arrange
+
         TestCase testCase1 = new TestCase(
                 "US name 1",
                 TestCaseStatus.FINISHED,
@@ -204,7 +205,6 @@ class TestCaseServiceTest {
 
         //Act
 
-
         List<TestCaseResponse> result = service.getAll();
 
         //Assert
@@ -228,5 +228,80 @@ class TestCaseServiceTest {
         assertEquals("Description 2", result.get(1).getDescription());
         assertEquals(TestCasePriority.HIGH, result.get(1).getPriority());
         assertEquals(TestCaseType.FUNCTIONAL, result.get(1).getType());
+    }
+
+    @Test
+    void update_notFound_shouldReturnEmpty() {
+        //Arrange
+
+        UUID uuid = UUID.randomUUID();
+
+        CreateTestCaseRequest request = new CreateTestCaseRequest();
+        request.setUs("US Name");
+        request.setStatus(TestCaseStatus.FINISHED);
+        request.setFeature("Feature name");
+        request.setScenario("Scenario");
+        request.setPriority(TestCasePriority.LOW);
+        request.setType(TestCaseType.UI);
+
+        when(repository.findById(uuid)).thenReturn(Optional.empty());
+
+        //Act
+        Optional<TestCaseResponse> response = service.update(uuid, request);
+
+        //Assert
+        verify(repository, times(1)).findById(uuid);
+        assertTrue(response.isEmpty());
+
+    }
+
+    @Test
+    void update_found_shouldUpdateSaveAndReturnResponse() {
+        //Arrange
+        UUID uuid = UUID.randomUUID();
+
+        CreateTestCaseRequest request = new CreateTestCaseRequest();
+        request.setUs("Updated US Name");
+        request.setStatus(TestCaseStatus.FINISHED);
+        request.setFeature("Updated Feature name");
+        request.setScenario("Updated Scenario");
+        request.setDescription("Updated Description");
+        request.setPriority(TestCasePriority.LOW);
+        request.setType(TestCaseType.UI);
+
+        TestCase existingTestCase = new TestCase(
+                "Old US Name",
+                TestCaseStatus.DRAFT,
+                "Old Feature Name",
+                "Old Scneario",
+                "Old Description",
+                TestCasePriority.MEDIUM,
+                TestCaseType.FUNCTIONAL
+        );
+
+        when(repository.findById(uuid)).thenReturn(Optional.of(existingTestCase));
+        when(repository.save(any(TestCase.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        //Act
+
+        Optional<TestCaseResponse> response = service.update(uuid, request);
+
+        //Assert
+        ArgumentCaptor<TestCase> captor = ArgumentCaptor.forClass(TestCase.class);
+        TestCase updatedTestCase = captor.getValue();
+
+        verify(repository, times(1)).findById(uuid);
+
+        assertTrue(response.isPresent());
+        assertEquals(response.get().getId(), updatedTestCase.getId());
+        assertEquals(response.get().getUs(), updatedTestCase.getUs());
+        assertEquals(response.get().getStatus(), updatedTestCase.getStatus());
+        assertEquals(response.get().getFeature(), updatedTestCase.getFeature());
+        assertEquals(response.get().getScenario(), updatedTestCase.getScenario());
+        assertEquals(response.get().getDescription(), updatedTestCase.getDescription());
+        assertEquals(response.get().getPriority(), updatedTestCase.getPriority());
+        assertEquals(response.get().getType(), updatedTestCase.getType());
+        assertEquals(response.get().getCreationInstant(), updatedTestCase.getCreationInstant());
+        assertEquals(response.get().getLastUpdateInstant(), updatedTestCase.getLastUpdateInstant());
     }
 }
