@@ -257,7 +257,9 @@ class TestCaseServiceTest {
 
     @Test
     void update_found_shouldUpdateSaveAndReturnResponse() {
+
         //Arrange
+
         UUID uuid = UUID.randomUUID();
 
         CreateTestCaseRequest request = new CreateTestCaseRequest();
@@ -287,10 +289,13 @@ class TestCaseServiceTest {
         Optional<TestCaseResponse> response = service.update(uuid, request);
 
         //Assert
+
         ArgumentCaptor<TestCase> captor = ArgumentCaptor.forClass(TestCase.class);
-        TestCase updatedTestCase = captor.getValue();
 
         verify(repository, times(1)).findById(uuid);
+        verify(repository, times(1)).save(captor.capture());
+
+        TestCase updatedTestCase = captor.getValue();
 
         assertTrue(response.isPresent());
         assertEquals(response.get().getId(), updatedTestCase.getId());
