@@ -8,6 +8,22 @@ on:
 jobs:
   build-test:
     runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: easyqa
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres -d easyqa"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
     steps:
       - uses: actions/checkout@v4
 
@@ -18,7 +34,11 @@ jobs:
           cache: maven
 
       - name: Run tests
-        run: mvn -B test
+        env:
+          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/easyqa
+          SPRING_DATASOURCE_USERNAME: postgres
+          SPRING_DATASOURCE_PASSWORD: postgres
 
-      - name: Build jar
-        run: mvn -B -DskipTests package
+          SPRING_JPA_HIBERNATE_DDL_AUTO: create-drop
+
+        run: mvn -B test
