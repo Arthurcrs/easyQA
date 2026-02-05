@@ -3,16 +3,24 @@ package com.arthur.easy_qa.dto;
 import com.arthur.easy_qa.domain.TestCasePriority;
 import com.arthur.easy_qa.domain.TestCaseStatus;
 import com.arthur.easy_qa.domain.TestCaseType;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
 public class CreateTestCaseRequest {
 
-    private TestCaseStatus status;
+    @NotBlank
+    TestCaseStatus status;
+    @NotNull
     private String us;
     private String feature;
+    @NotBlank
     private String scenario;
-    private String description;
+    @NotBlank
+    String description;
+    @NotNull
     private TestCasePriority priority;
-    private TestCaseType type;
+    @NotNull
+    TestCaseType type;
 
     public CreateTestCaseRequest() {
     }

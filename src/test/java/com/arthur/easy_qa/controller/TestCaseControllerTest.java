@@ -64,7 +64,8 @@ class TestCaseControllerTest {
 
         when(service.create(any(CreateTestCaseRequest.class))).thenReturn(serviceResponse);
 
-        //Act
+        //Act and Assert
+
         mockMvc.perform(post("/api/v1/test-cases")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestJson))
@@ -75,7 +76,6 @@ class TestCaseControllerTest {
                 .andExpect(jsonPath("$.us").value("US-1"))
                 .andExpect(jsonPath("$.status").value("DRAFT"));
 
-        //Assert
         ArgumentCaptor<CreateTestCaseRequest> captor =
                 ArgumentCaptor.forClass(CreateTestCaseRequest.class);
 
@@ -92,4 +92,32 @@ class TestCaseControllerTest {
 
         verifyNoMoreInteractions(service);
     }
+
+    @Test
+    void create_invalidRequest_shouldReturn400AndNotCallService() throws Exception {
+
+        //Arrange
+
+        String invalidJson = """
+                {
+                  "status": "DRAFT",
+                  "us": "US-1",
+                  "feature": "",
+                  "scenario": "Scenario A",
+                  "description": "Description A",
+                  "type": ""
+                }
+                """;
+        //Act and Assert
+
+        mockMvc.perform(post("/api/v1/test-cases")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(invalidJson))
+                .andExpect(status().isBadRequest());
+
+
+        verify(service, times(0)).create(any(CreateTestCaseRequest.class));
+
+    }
+
 }
