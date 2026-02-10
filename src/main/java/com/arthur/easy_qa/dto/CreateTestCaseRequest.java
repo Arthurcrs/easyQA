@@ -8,7 +8,7 @@ import jakarta.validation.constraints.NotNull;
 
 public class CreateTestCaseRequest {
 
-    @NotBlank
+    @NotNull
     TestCaseStatus status;
     @NotNull
     private String us;
