@@ -105,6 +105,4 @@ public class TestCycleControllerTest {
 
         verifyNoInteractions(service);
     }
-
-
 }

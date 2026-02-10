@@ -34,7 +34,9 @@ class TestCaseControllerTest {
 
     @Test
     void create_validRequest_shouldCallServiceAndReturnCreatedResponse() throws Exception {
+
         //Arrange
+
         UUID uuid = UUID.randomUUID();
 
         String requestJson = """
@@ -108,6 +110,7 @@ class TestCaseControllerTest {
                   "type": ""
                 }
                 """;
+
         //Act and Assert
 
         mockMvc.perform(post("/api/v1/test-cases")
@@ -119,5 +122,4 @@ class TestCaseControllerTest {
         verify(service, times(0)).create(any(CreateTestCaseRequest.class));
 
     }
-
 }

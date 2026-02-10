@@ -7,15 +7,12 @@ import com.arthur.easy_qa.domain.TestCaseType;
 import com.arthur.easy_qa.dto.CreateTestCaseRequest;
 import com.arthur.easy_qa.dto.TestCaseResponse;
 import com.arthur.easy_qa.repository.TestCaseRepository;
-import com.sun.source.tree.AssertTree;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
-import org.springframework.stereotype.Repository;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -36,7 +33,9 @@ class TestCaseServiceTest {
 
     @Test
     void create_validRequest_shouldSaveAndReturnResponse() {
+
         // Arrange
+
         CreateTestCaseRequest request = new CreateTestCaseRequest();
         request.setUs("User Story Name");
         request.setStatus(TestCaseStatus.DRAFT);
@@ -48,19 +47,22 @@ class TestCaseServiceTest {
 
         when(repository.save(any(TestCase.class))).thenAnswer(invocation -> {
             TestCase tc = invocation.getArgument(0);
-            simulateJpaPrePersist(tc); // simulate id + @PrePersist
+            simulateJpaPrePersist(tc);
             return tc;
         });
 
         // Act
+
         TestCaseResponse response = service.create(request);
 
-        // Assert: repository interaction + captured saved entity
+        // Assert
+
         ArgumentCaptor<TestCase> captor = ArgumentCaptor.forClass(TestCase.class);
         verify(repository, times(1)).save(captor.capture());
         TestCase saved = captor.getValue();
 
-        // Assert: entity built from request
+        // Assert
+
         assertNotNull(saved);
         assertNotNull(saved.getId());
         assertEquals("User Story Name", saved.getUs());
@@ -75,7 +77,6 @@ class TestCaseServiceTest {
         assertNotNull(saved.getLastUpdateInstant());
         assertEquals(saved.getCreationInstant(), saved.getLastUpdateInstant());
 
-        // Assert: response mapped from saved entity
         assertNotNull(response);
         assertEquals(saved.getId(), response.getId());
         assertEquals(saved.getUs(), response.getUs());
@@ -119,35 +120,45 @@ class TestCaseServiceTest {
 
     @Test
     void delete_shouldReturnRepositoryResult() {
+
         //Arrange
+
         UUID uuid = UUID.randomUUID();
         when(repository.deleteById(uuid)).thenReturn(true);
 
         //Act
+
         boolean result = service.delete(uuid);
 
         //Assert
+
         verify(repository, times(1)).deleteById(uuid);
         assertTrue(result);
     }
 
     @Test
     void getById_notFound_shouldReturnEmpty() {
+
         //Arrange
+
         UUID uuid = UUID.randomUUID();
         when(repository.findById(uuid)).thenReturn(Optional.empty());
 
         //Act
+
         Optional<TestCaseResponse> result = service.getById(uuid);
 
         //Assert
+
         verify(repository, times(1)).findById(uuid);
         assertTrue(result.isEmpty());
     }
 
     @Test
     void getById_found_shouldReturnResponse() {
+
         //Arrange
+
         UUID uuid = UUID.randomUUID();
 
         TestCase testCase = new TestCase(
@@ -163,9 +174,11 @@ class TestCaseServiceTest {
         when(repository.findById(uuid)).thenReturn(Optional.of(testCase));
 
         //Act
+
         Optional<TestCaseResponse> response = service.getById(uuid);
 
         //Assert
+
         verify(repository, times(1)).findById(uuid);
         assertTrue(response.isPresent());
         TestCaseResponse dto = response.get();
@@ -179,6 +192,7 @@ class TestCaseServiceTest {
 
     @Test
     void getAll_shouldReturnMappedList() {
+
         //Arrange
 
         TestCase testCase1 = new TestCase(
@@ -232,6 +246,7 @@ class TestCaseServiceTest {
 
     @Test
     void update_notFound_shouldReturnEmpty() {
+
         //Arrange
 
         UUID uuid = UUID.randomUUID();
@@ -247,12 +262,13 @@ class TestCaseServiceTest {
         when(repository.findById(uuid)).thenReturn(Optional.empty());
 
         //Act
+
         Optional<TestCaseResponse> response = service.update(uuid, request);
 
         //Assert
+
         verify(repository, times(1)).findById(uuid);
         assertTrue(response.isEmpty());
-
     }
 
     @Test
