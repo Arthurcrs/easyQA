@@ -120,6 +120,5 @@ class TestCaseControllerTest {
 
 
         verify(service, times(0)).create(any(CreateTestCaseRequest.class));
-
     }
 }

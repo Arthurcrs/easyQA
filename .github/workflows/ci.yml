@@ -34,11 +34,10 @@ jobs:
           cache: maven
 
       - name: Run tests
+        working-directory: backend
         env:
           SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/easyqa
           SPRING_DATASOURCE_USERNAME: postgres
           SPRING_DATASOURCE_PASSWORD: postgres
-
           SPRING_JPA_HIBERNATE_DDL_AUTO: create-drop
-
-        run: mvn -B test
+        run: ./mvnw -B test
