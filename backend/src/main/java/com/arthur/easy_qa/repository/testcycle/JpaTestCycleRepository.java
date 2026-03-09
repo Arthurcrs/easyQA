@@ -1,6 +1,5 @@
-package com.arthur.easy_qa.repository;
+package com.arthur.easy_qa.repository.testcycle;
 
-import com.arthur.easy_qa.domain.TestCase;
 import com.arthur.easy_qa.domain.TestCycle;
 import org.springframework.data.jpa.repository.JpaRepository;
 

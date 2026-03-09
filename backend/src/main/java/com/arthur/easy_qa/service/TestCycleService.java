@@ -1,8 +1,8 @@
 package com.arthur.easy_qa.service;
 
-import com.arthur.easy_qa.dto.CreateTestCycleRequest;
-import com.arthur.easy_qa.dto.TestCycleResponse;
-import com.arthur.easy_qa.repository.TestCycleRepository;
+import com.arthur.easy_qa.dto.testcycle.CreateTestCycleRequest;
+import com.arthur.easy_qa.dto.testcycle.TestCycleResponse;
+import com.arthur.easy_qa.repository.testcycle.TestCycleRepository;
 import org.springframework.stereotype.Service;
 
 @Service

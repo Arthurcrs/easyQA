@@ -1,7 +1,5 @@
-package com.arthur.easy_qa.dto;
+package com.arthur.easy_qa.dto.testcycle;
 
-
-import com.arthur.easy_qa.service.TestCycleService;
 
 import java.util.UUID;
 

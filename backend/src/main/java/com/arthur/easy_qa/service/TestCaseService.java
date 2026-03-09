@@ -1,9 +1,9 @@
 package com.arthur.easy_qa.service;
 
 import com.arthur.easy_qa.domain.TestCase;
-import com.arthur.easy_qa.dto.CreateTestCaseRequest;
-import com.arthur.easy_qa.dto.TestCaseResponse;
-import com.arthur.easy_qa.repository.TestCaseRepository;
+import com.arthur.easy_qa.dto.testcase.CreateTestCaseRequest;
+import com.arthur.easy_qa.dto.testcase.TestCaseResponse;
+import com.arthur.easy_qa.repository.testcase.TestCaseRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

@@ -1,4 +1,4 @@
-package com.arthur.easy_qa.dto;
+package com.arthur.easy_qa.dto.testcycle;
 
 import jakarta.validation.constraints.NotBlank;
 

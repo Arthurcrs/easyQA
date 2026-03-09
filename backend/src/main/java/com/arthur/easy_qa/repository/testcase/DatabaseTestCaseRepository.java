@@ -1,4 +1,4 @@
-package com.arthur.easy_qa.repository;
+package com.arthur.easy_qa.repository.testcase;
 
 import com.arthur.easy_qa.domain.TestCase;
 import org.springframework.context.annotation.Primary;

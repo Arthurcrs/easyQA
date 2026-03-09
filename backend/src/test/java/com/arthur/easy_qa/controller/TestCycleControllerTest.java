@@ -1,8 +1,7 @@
 package com.arthur.easy_qa.controller;
 
-import com.arthur.easy_qa.dto.CreateTestCycleRequest;
-import com.arthur.easy_qa.dto.TestCycleResponse;
-import com.arthur.easy_qa.service.TestCaseService;
+import com.arthur.easy_qa.dto.testcycle.CreateTestCycleRequest;
+import com.arthur.easy_qa.dto.testcycle.TestCycleResponse;
 import com.arthur.easy_qa.service.TestCycleService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

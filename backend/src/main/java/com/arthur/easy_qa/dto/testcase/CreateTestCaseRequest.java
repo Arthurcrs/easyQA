@@ -1,4 +1,4 @@
-package com.arthur.easy_qa.dto;
+package com.arthur.easy_qa.dto.testcase;
 
 import com.arthur.easy_qa.domain.TestCasePriority;
 import com.arthur.easy_qa.domain.TestCaseStatus;

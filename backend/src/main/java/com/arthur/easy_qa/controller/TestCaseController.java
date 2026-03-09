@@ -1,7 +1,7 @@
 package com.arthur.easy_qa.controller;
 
-import com.arthur.easy_qa.dto.CreateTestCaseRequest;
-import com.arthur.easy_qa.dto.TestCaseResponse;
+import com.arthur.easy_qa.dto.testcase.CreateTestCaseRequest;
+import com.arthur.easy_qa.dto.testcase.TestCaseResponse;
 import com.arthur.easy_qa.service.TestCaseService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;

@@ -1,8 +1,8 @@
 package com.arthur.easy_qa.controller;
 
 
-import com.arthur.easy_qa.dto.CreateTestCycleRequest;
-import com.arthur.easy_qa.dto.TestCycleResponse;
+import com.arthur.easy_qa.dto.testcycle.CreateTestCycleRequest;
+import com.arthur.easy_qa.dto.testcycle.TestCycleResponse;
 import com.arthur.easy_qa.service.TestCycleService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
