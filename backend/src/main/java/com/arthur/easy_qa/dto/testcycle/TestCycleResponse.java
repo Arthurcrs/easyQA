@@ -1,27 +1,36 @@
 package com.arthur.easy_qa.dto.testcycle;
 
-
-import java.util.UUID;
+import java.time.Instant;
 
 public class TestCycleResponse {
 
-    private UUID id;
+    private String projectKey;
+    private Long testCycleNumber;
     private String name;
     private String version;
     private String environment;
     private String type;
+    private Instant creationInstant;
+    private Instant lastUpdateInstant;
 
-
-    public TestCycleResponse(UUID id, String name, String version, String environment, String type) {
-        this.id = id;
+    public TestCycleResponse(String projectKey, Long testCycleNumber, String name, String version,
+                             String environment, String type, Instant creationInstant, Instant lastUpdateInstant) {
+        this.projectKey = projectKey;
+        this.testCycleNumber = testCycleNumber;
         this.name = name;
         this.version = version;
         this.environment = environment;
         this.type = type;
+        this.creationInstant = creationInstant;
+        this.lastUpdateInstant = lastUpdateInstant;
     }
 
-    public UUID getId() {
-        return id;
+    public String getProjectKey() {
+        return projectKey;
+    }
+
+    public Long getTestCycleNumber() {
+        return testCycleNumber;
     }
 
     public String getName() {
@@ -32,11 +41,19 @@ public class TestCycleResponse {
         return version;
     }
 
+    public String getEnvironment() {
+        return environment;
+    }
+
     public String getType() {
         return type;
     }
 
-    public String getEnvironment() {
-        return environment;
+    public Instant getCreationInstant() {
+        return creationInstant;
+    }
+
+    public Instant getLastUpdateInstant() {
+        return lastUpdateInstant;
     }
 }
