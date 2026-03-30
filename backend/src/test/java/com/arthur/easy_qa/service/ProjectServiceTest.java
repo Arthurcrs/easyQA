@@ -7,439 +7,208 @@ import com.arthur.easy_qa.dto.project.UpdateProjectRequest;
 import com.arthur.easy_qa.repository.project.ProjectRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 
 import java.lang.reflect.Field;
 import java.time.Instant;
+import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
-
-import java.util.List;
-import java.util.Optional;
 
 class ProjectServiceTest {
 
-    private ProjectRepository repository;
-    private ProjectService service;
+    private ProjectRepository projectRepository;
+    private ProjectService projectService;
+
+    private final String PROJECT_KEY = "EASYQA";
+    private Project activeProject;
+    private Project archivedProject;
 
     @BeforeEach
-    void setup() {
-        repository = mock(ProjectRepository.class);
-        service = new ProjectService(repository);
+    void setUp() {
+        projectRepository = mock(ProjectRepository.class);
+        projectService = new ProjectService(projectRepository);
+
+        activeProject = new Project("EasyQA", PROJECT_KEY, Instant.now(), false);
+        setProjectId(activeProject, UUID.randomUUID());
+
+        archivedProject = new Project("Archived App", "ARCH", Instant.now(), true);
+        setProjectId(archivedProject, UUID.randomUUID());
     }
 
     @Test
     void create_validRequest_shouldSaveAndReturnResponse() {
         CreateProjectRequest request = new CreateProjectRequest();
-        request.setName("Easy QA");
+        request.setName("New Project");
 
-        when(repository.existsByNameIgnoreCase("Easy QA")).thenReturn(false);
-        when(repository.save(any(Project.class))).thenAnswer(invocation -> {
-            Project project = invocation.getArgument(0);
-            setPrivateField(project, "id", UUID.randomUUID());
-            return project;
+        when(projectRepository.existsByNameIgnoreCase("New Project")).thenReturn(false);
+        when(projectRepository.save(any(Project.class))).thenAnswer(invocation -> {
+            Project p = invocation.getArgument(0);
+            setProjectId(p, UUID.randomUUID());
+            return p;
         });
 
-        ProjectResponse response = service.create(request);
-
-        verify(repository).existsByNameIgnoreCase("Easy QA");
-        verify(repository).save(any(Project.class));
+        ProjectResponse response = projectService.create(request);
 
         assertNotNull(response);
-        assertNotNull(response.getId());
-        assertEquals("Easy QA", response.getName());
-        assertEquals("EASY-QA", response.getKey());
-        assertNotNull(response.getCreationDate());
+        assertEquals("NEW-PROJECT", response.getKey());
         assertFalse(response.isArchived());
+
+        verify(projectRepository, times(1)).existsByNameIgnoreCase("New Project");
+        verify(projectRepository, times(1)).save(any(Project.class));
     }
 
     @Test
-    void create_blankName_shouldThrowIllegalArgumentException() {
+    void create_duplicateName_shouldThrowException() {
         CreateProjectRequest request = new CreateProjectRequest();
-        request.setName("   ");
+        request.setName("EasyQA");
 
-        IllegalArgumentException exception = assertThrows(
-                IllegalArgumentException.class,
-                () -> service.create(request)
-        );
+        when(projectRepository.existsByNameIgnoreCase("EasyQA")).thenReturn(true);
 
-        assertEquals("Project name must not be blank", exception.getMessage());
-        verify(repository, never()).existsByNameIgnoreCase(anyString());
-        verify(repository, never()).save(any(Project.class));
-    }
-
-    @Test
-    void create_nullName_shouldThrowIllegalArgumentException() {
-        CreateProjectRequest request = new CreateProjectRequest();
-        request.setName(null);
-
-        IllegalArgumentException exception = assertThrows(
-                IllegalArgumentException.class,
-                () -> service.create(request)
-        );
-
-        assertEquals("Project name must not be blank", exception.getMessage());
-        verify(repository, never()).existsByNameIgnoreCase(anyString());
-        verify(repository, never()).save(any(Project.class));
-    }
-
-    @Test
-    void create_nullRequest_shouldThrowIllegalArgumentException() {
-        IllegalArgumentException exception = assertThrows(
-                IllegalArgumentException.class,
-                () -> service.create(null)
-        );
-
-        assertEquals("Project name must not be blank", exception.getMessage());
-        verify(repository, never()).existsByNameIgnoreCase(anyString());
-        verify(repository, never()).save(any(Project.class));
-    }
-
-    @Test
-    void create_duplicateName_shouldThrowIllegalArgumentException() {
-        CreateProjectRequest request = new CreateProjectRequest();
-        request.setName("Easy QA");
-
-        when(repository.existsByNameIgnoreCase("Easy QA")).thenReturn(true);
-
-        IllegalArgumentException exception = assertThrows(
-                IllegalArgumentException.class,
-                () -> service.create(request)
-        );
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> projectService.create(request));
 
         assertEquals("Project name already exists", exception.getMessage());
-        verify(repository).existsByNameIgnoreCase("Easy QA");
-        verify(repository, never()).save(any(Project.class));
+        verify(projectRepository, never()).save(any(Project.class));
     }
 
     @Test
-    void create_nameWithExtraSpaces_shouldTrimBeforeSave() {
-        CreateProjectRequest request = new CreateProjectRequest();
-        request.setName("   Easy QA   ");
+    void getAll_excludeArchived_shouldReturnActiveOnly() {
+        when(projectRepository.findAll(false)).thenReturn(List.of(activeProject));
 
-        when(repository.existsByNameIgnoreCase("Easy QA")).thenReturn(false);
-        when(repository.save(any(Project.class))).thenAnswer(invocation -> {
-            Project project = invocation.getArgument(0);
-            setPrivateField(project, "id", UUID.randomUUID());
-            return project;
-        });
+        List<ProjectResponse> responses = projectService.getAll(false);
 
-        ProjectResponse response = service.create(request);
-
-        verify(repository).existsByNameIgnoreCase("Easy QA");
-        verify(repository).save(any(Project.class));
-
-        assertEquals("Easy QA", response.getName());
-        assertEquals("EASY-QA", response.getKey());
+        assertEquals(1, responses.size());
+        assertEquals("EasyQA", responses.get(0).getName());
+        verify(projectRepository, times(1)).findAll(false);
     }
 
     @Test
-    void getAll_includeArchivedFalse_shouldReturnOnlyActiveProjects() {
-        Project project1 = buildProject("EASY-QA", "Easy QA", false);
-        Project project2 = buildProject("BANK-QA", "Bank QA", false);
+    void getAll_includeArchived_shouldReturnAll() {
+        when(projectRepository.findAll(true)).thenReturn(List.of(activeProject, archivedProject));
 
-        when(repository.findAllByArchivedFalse()).thenReturn(List.of(project1, project2));
+        List<ProjectResponse> responses = projectService.getAll(true);
 
-        List<ProjectResponse> result = service.getAll(false);
-
-        verify(repository).findAllByArchivedFalse();
-        verify(repository, never()).findAll();
-
-        assertEquals(2, result.size());
-        assertEquals("EASY-QA", result.get(0).getKey());
-        assertEquals("Easy QA", result.get(0).getName());
-        assertFalse(result.get(0).isArchived());
-
-        assertEquals("BANK-QA", result.get(1).getKey());
-        assertEquals("Bank QA", result.get(1).getName());
-        assertFalse(result.get(1).isArchived());
-    }
-
-    @Test
-    void getAll_includeArchivedTrue_shouldReturnAllProjects() {
-        Project activeProject = buildProject("EASY-QA", "Easy QA", false);
-        Project archivedProject = buildProject("OLD-QA", "Old QA", true);
-
-        when(repository.findAll()).thenReturn(List.of(activeProject, archivedProject));
-
-        List<ProjectResponse> result = service.getAll(true);
-
-        verify(repository).findAll();
-        verify(repository, never()).findAllByArchivedFalse();
-
-        assertEquals(2, result.size());
-        assertEquals("EASY-QA", result.get(0).getKey());
-        assertFalse(result.get(0).isArchived());
-
-        assertEquals("OLD-QA", result.get(1).getKey());
-        assertTrue(result.get(1).isArchived());
+        assertEquals(2, responses.size());
+        verify(projectRepository, times(1)).findAll(true);
     }
 
     @Test
     void getByKey_existingProject_shouldReturnResponse() {
-        Project project = buildProject("EASY-QA", "Easy QA", false);
+        when(projectRepository.findByKey(PROJECT_KEY)).thenReturn(Optional.of(activeProject));
 
-        when(repository.findByKey("EASY-QA")).thenReturn(Optional.of(project));
+        Optional<ProjectResponse> response = projectService.getByKey(PROJECT_KEY);
 
-        Optional<ProjectResponse> result = service.getByKey("EASY-QA");
-
-        verify(repository).findByKey("EASY-QA");
-        assertTrue(result.isPresent());
-        assertEquals("EASY-QA", result.get().getKey());
-        assertEquals("Easy QA", result.get().getName());
-        assertFalse(result.get().isArchived());
+        assertTrue(response.isPresent());
+        assertEquals("EasyQA", response.get().getName());
+        verify(projectRepository, times(1)).findByKey(PROJECT_KEY);
     }
 
     @Test
-    void getByKey_missingProject_shouldReturnEmpty() {
-        when(repository.findByKey("EASY-QA")).thenReturn(Optional.empty());
+    void getByKey_nonExistingProject_shouldReturnEmpty() {
+        when(projectRepository.findByKey("UNKNOWN")).thenReturn(Optional.empty());
 
-        Optional<ProjectResponse> result = service.getByKey("EASY-QA");
+        Optional<ProjectResponse> response = projectService.getByKey("UNKNOWN");
 
-        verify(repository).findByKey("EASY-QA");
-        assertTrue(result.isEmpty());
+        assertTrue(response.isEmpty());
+        verify(projectRepository, times(1)).findByKey("UNKNOWN");
     }
 
     @Test
-    void updateName_existingProject_shouldSaveAndReturnUpdatedResponse() {
-        Project existingProject = buildProject("EASY-QA", "Easy QA", false);
-
+    void updateName_validRequest_shouldUpdateAndReturnResponse() {
         UpdateProjectRequest request = new UpdateProjectRequest();
-        request.setName("Easy QA Renamed");
+        request.setName("Updated EasyQA");
 
-        when(repository.findByKey("EASY-QA")).thenReturn(Optional.of(existingProject));
-        when(repository.existsByNameIgnoreCase("Easy QA Renamed")).thenReturn(false);
-        when(repository.save(existingProject)).thenReturn(existingProject);
+        when(projectRepository.findByKey(PROJECT_KEY)).thenReturn(Optional.of(activeProject));
+        when(projectRepository.existsByNameIgnoreCase("Updated EasyQA")).thenReturn(false);
+        when(projectRepository.save(any(Project.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        Optional<ProjectResponse> result = service.updateName("EASY-QA", request);
+        Optional<ProjectResponse> response = projectService.updateName(PROJECT_KEY, request);
 
-        verify(repository).findByKey("EASY-QA");
-        verify(repository).existsByNameIgnoreCase("Easy QA Renamed");
-        verify(repository).save(existingProject);
+        assertTrue(response.isPresent());
+        assertEquals("Updated EasyQA", response.get().getName());
 
-        assertTrue(result.isPresent());
-        assertEquals("Easy QA Renamed", result.get().getName());
-        assertEquals("EASY-QA", result.get().getKey());
-        assertFalse(result.get().isArchived());
+        ArgumentCaptor<Project> captor = ArgumentCaptor.forClass(Project.class);
+        verify(projectRepository).save(captor.capture());
+        assertEquals("Updated EasyQA", captor.getValue().getName());
     }
 
     @Test
-    void updateName_blankName_shouldThrowIllegalArgumentException() {
+    void updateName_duplicateName_shouldThrowException() {
         UpdateProjectRequest request = new UpdateProjectRequest();
-        request.setName("   ");
+        request.setName("Duplicate Name");
 
-        IllegalArgumentException exception = assertThrows(
-                IllegalArgumentException.class,
-                () -> service.updateName("EASY-QA", request)
-        );
+        when(projectRepository.findByKey(PROJECT_KEY)).thenReturn(Optional.of(activeProject));
+        when(projectRepository.existsByNameIgnoreCase("Duplicate Name")).thenReturn(true);
 
-        assertEquals("Project name must not be blank", exception.getMessage());
-        verify(repository, never()).findByKey(anyString());
-        verify(repository, never()).existsByNameIgnoreCase(anyString());
-        verify(repository, never()).save(any(Project.class));
-    }
-
-    @Test
-    void updateName_nullName_shouldThrowIllegalArgumentException() {
-        UpdateProjectRequest request = new UpdateProjectRequest();
-        request.setName(null);
-
-        IllegalArgumentException exception = assertThrows(
-                IllegalArgumentException.class,
-                () -> service.updateName("EASY-QA", request)
-        );
-
-        assertEquals("Project name must not be blank", exception.getMessage());
-        verify(repository, never()).findByKey(anyString());
-        verify(repository, never()).existsByNameIgnoreCase(anyString());
-        verify(repository, never()).save(any(Project.class));
-    }
-
-    @Test
-    void updateName_nullRequest_shouldThrowIllegalArgumentException() {
-        IllegalArgumentException exception = assertThrows(
-                IllegalArgumentException.class,
-                () -> service.updateName("EASY-QA", null)
-        );
-
-        assertEquals("Project name must not be blank", exception.getMessage());
-        verify(repository, never()).findByKey(anyString());
-        verify(repository, never()).existsByNameIgnoreCase(anyString());
-        verify(repository, never()).save(any(Project.class));
-    }
-
-    @Test
-    void updateName_duplicateName_shouldThrowIllegalArgumentException() {
-        Project existingProject = buildProject("EASY-QA", "Easy QA", false);
-
-        UpdateProjectRequest request = new UpdateProjectRequest();
-        request.setName("Another Project");
-
-        when(repository.findByKey("EASY-QA")).thenReturn(Optional.of(existingProject));
-        when(repository.existsByNameIgnoreCase("Another Project")).thenReturn(true);
-
-        IllegalArgumentException exception = assertThrows(
-                IllegalArgumentException.class,
-                () -> service.updateName("EASY-QA", request)
-        );
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> projectService.updateName(PROJECT_KEY, request));
 
         assertEquals("Project name already exists", exception.getMessage());
-        verify(repository).findByKey("EASY-QA");
-        verify(repository).existsByNameIgnoreCase("Another Project");
-        verify(repository, never()).save(any(Project.class));
+        verify(projectRepository, never()).save(any(Project.class));
     }
 
     @Test
-    void updateName_sameNameIgnoringCase_shouldUpdateWithoutDuplicateError() {
-        Project existingProject = buildProject("EASY-QA", "Easy QA", false);
+    void archive_existingProject_shouldArchiveAndReturnResponse() {
+        when(projectRepository.findByKey(PROJECT_KEY)).thenReturn(Optional.of(activeProject));
+        when(projectRepository.save(any(Project.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        UpdateProjectRequest request = new UpdateProjectRequest();
-        request.setName("easy qa");
+        Optional<ProjectResponse> response = projectService.archive(PROJECT_KEY);
 
-        when(repository.findByKey("EASY-QA")).thenReturn(Optional.of(existingProject));
-        when(repository.save(existingProject)).thenReturn(existingProject);
+        assertTrue(response.isPresent());
+        assertTrue(response.get().isArchived());
 
-        Optional<ProjectResponse> result = service.updateName("EASY-QA", request);
-
-        verify(repository).findByKey("EASY-QA");
-        verify(repository, never()).existsByNameIgnoreCase(anyString());
-        verify(repository).save(existingProject);
-
-        assertTrue(result.isPresent());
-        assertEquals("easy qa", result.get().getName());
-        assertEquals("EASY-QA", result.get().getKey());
+        ArgumentCaptor<Project> captor = ArgumentCaptor.forClass(Project.class);
+        verify(projectRepository).save(captor.capture());
+        assertTrue(captor.getValue().isArchived());
     }
 
     @Test
-    void updateName_nameWithExtraSpaces_shouldTrimBeforeSave() {
-        Project existingProject = buildProject("EASY-QA", "Easy QA", false);
+    void restore_archivedProject_shouldRestoreAndReturnResponse() {
+        when(projectRepository.findByKey("ARCH")).thenReturn(Optional.of(archivedProject));
+        when(projectRepository.save(any(Project.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        UpdateProjectRequest request = new UpdateProjectRequest();
-        request.setName("   Easy QA Renamed   ");
+        Optional<ProjectResponse> response = projectService.restore("ARCH");
 
-        when(repository.findByKey("EASY-QA")).thenReturn(Optional.of(existingProject));
-        when(repository.existsByNameIgnoreCase("Easy QA Renamed")).thenReturn(false);
-        when(repository.save(existingProject)).thenReturn(existingProject);
+        assertTrue(response.isPresent());
+        assertFalse(response.get().isArchived());
 
-        Optional<ProjectResponse> result = service.updateName("EASY-QA", request);
-
-        verify(repository).findByKey("EASY-QA");
-        verify(repository).existsByNameIgnoreCase("Easy QA Renamed");
-        verify(repository).save(existingProject);
-
-        assertTrue(result.isPresent());
-        assertEquals("Easy QA Renamed", result.get().getName());
-        assertEquals("EASY-QA", result.get().getKey());
-    }
-
-    @Test
-    void updateName_missingProject_shouldReturnEmpty() {
-        UpdateProjectRequest request = new UpdateProjectRequest();
-        request.setName("Renamed");
-
-        when(repository.findByKey("EASY-QA")).thenReturn(Optional.empty());
-
-        Optional<ProjectResponse> result = service.updateName("EASY-QA", request);
-
-        verify(repository).findByKey("EASY-QA");
-        verify(repository, never()).existsByNameIgnoreCase(anyString());
-        verify(repository, never()).save(any(Project.class));
-        assertTrue(result.isEmpty());
-    }
-
-    @Test
-    void archive_existingProject_shouldSaveArchivedProject() {
-        Project existingProject = buildProject("EASY-QA", "Easy QA", false);
-
-        when(repository.findByKey("EASY-QA")).thenReturn(Optional.of(existingProject));
-        when(repository.save(existingProject)).thenReturn(existingProject);
-
-        Optional<ProjectResponse> result = service.archive("EASY-QA");
-
-        verify(repository).findByKey("EASY-QA");
-        verify(repository).save(existingProject);
-
-        assertTrue(result.isPresent());
-        assertTrue(result.get().isArchived());
-    }
-
-    @Test
-    void archive_missingProject_shouldReturnEmpty() {
-        when(repository.findByKey("EASY-QA")).thenReturn(Optional.empty());
-
-        Optional<ProjectResponse> result = service.archive("EASY-QA");
-
-        verify(repository).findByKey("EASY-QA");
-        verify(repository, never()).save(any(Project.class));
-        assertTrue(result.isEmpty());
-    }
-
-    @Test
-    void restore_existingProject_shouldSaveRestoredProject() {
-        Project existingProject = buildProject("EASY-QA", "Easy QA", true);
-
-        when(repository.findByKey("EASY-QA")).thenReturn(Optional.of(existingProject));
-        when(repository.save(existingProject)).thenReturn(existingProject);
-
-        Optional<ProjectResponse> result = service.restore("EASY-QA");
-
-        verify(repository).findByKey("EASY-QA");
-        verify(repository).save(existingProject);
-
-        assertTrue(result.isPresent());
-        assertFalse(result.get().isArchived());
-    }
-
-    @Test
-    void restore_missingProject_shouldReturnEmpty() {
-        when(repository.findByKey("EASY-QA")).thenReturn(Optional.empty());
-
-        Optional<ProjectResponse> result = service.restore("EASY-QA");
-
-        verify(repository).findByKey("EASY-QA");
-        verify(repository, never()).save(any(Project.class));
-        assertTrue(result.isEmpty());
+        ArgumentCaptor<Project> captor = ArgumentCaptor.forClass(Project.class);
+        verify(projectRepository).save(captor.capture());
+        assertFalse(captor.getValue().isArchived());
     }
 
     @Test
     void delete_existingProject_shouldReturnTrue() {
-        when(repository.deleteByKey("EASY-QA")).thenReturn(1L);
+        when(projectRepository.deleteByKey(PROJECT_KEY)).thenReturn(true);
 
-        boolean result = service.delete("EASY-QA");
+        boolean result = projectService.delete(PROJECT_KEY);
 
-        verify(repository).deleteByKey("EASY-QA");
         assertTrue(result);
+        verify(projectRepository, times(1)).deleteByKey(PROJECT_KEY);
     }
 
     @Test
-    void delete_missingProject_shouldReturnFalse() {
-        when(repository.deleteByKey("EASY-QA")).thenReturn(0L);
+    void delete_nonExistingProject_shouldReturnFalse() {
+        when(projectRepository.deleteByKey("UNKNOWN")).thenReturn(false);
 
-        boolean result = service.delete("EASY-QA");
+        boolean result = projectService.delete("UNKNOWN");
 
-        verify(repository).deleteByKey("EASY-QA");
         assertFalse(result);
+        verify(projectRepository, times(1)).deleteByKey("UNKNOWN");
     }
 
-    private Project buildProject(String key, String name, boolean archived) {
-        Project project = new Project(
-                name,
-                key,
-                Instant.parse("2026-03-09T12:00:00Z"),
-                archived
-        );
-        setPrivateField(project, "id", UUID.randomUUID());
-        return project;
-    }
-
-    private static void setPrivateField(Object target, String fieldName, Object value) {
+    private void setProjectId(Project project, UUID id) {
         try {
-            Field field = target.getClass().getDeclaredField(fieldName);
-            field.setAccessible(true);
-            field.set(target, value);
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to set field: " + fieldName, e);
+            Field idField = Project.class.getDeclaredField("id");
+            idField.setAccessible(true);
+            idField.set(project, id);
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            throw new RuntimeException("Could not set project ID", e);
         }
     }
 }

@@ -40,9 +40,7 @@ public class ProjectService {
     }
 
     public List<ProjectResponse> getAll(boolean includeArchived) {
-        List<Project> projects = includeArchived
-                ? repository.findAll()
-                : repository.findAllByArchivedFalse();
+        List<Project> projects = repository.findAll(includeArchived);
 
         return projects.stream()
                 .map(this::toResponse)
@@ -103,7 +101,7 @@ public class ProjectService {
     }
 
     public boolean delete(String key) {
-        return repository.deleteByKey(key) > 0;
+        return repository.deleteByKey(key);
     }
 
     private void validateName(String name) {
