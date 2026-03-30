@@ -57,4 +57,27 @@ public class TestCycleController {
         boolean deleted = service.delete(projectKey, testCycleNumber);
         return deleted ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
     }
+
+    @PostMapping("/{testCycleNumber}/test-cases")
+    public ResponseEntity<Void> addTestCases(@PathVariable("projectKey") String projectKey,
+                                             @PathVariable("testCycleNumber") Long testCycleNumber,
+                                             @RequestBody List<Long> testCaseNumbers) {
+        service.addTestCasesToCycle(projectKey, testCycleNumber, testCaseNumbers);
+        return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping("/{testCycleNumber}/test-cases/{testCaseNumber}")
+    public ResponseEntity<Void> removeTestCase(@PathVariable("projectKey") String projectKey,
+                                               @PathVariable("testCycleNumber") Long testCycleNumber,
+                                               @PathVariable("testCaseNumber") Long testCaseNumber) {
+        service.removeTestCaseFromCycle(projectKey, testCycleNumber, testCaseNumber);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/{testCycleNumber}/duplicate")
+    public ResponseEntity<TestCycleResponse> duplicate(@PathVariable("projectKey") String projectKey,
+                                                       @PathVariable("testCycleNumber") Long testCycleNumber) {
+        TestCycleResponse duplicatedCycle = service.duplicate(projectKey, testCycleNumber);
+        return ResponseEntity.status(201).body(duplicatedCycle);
+    }
 }
