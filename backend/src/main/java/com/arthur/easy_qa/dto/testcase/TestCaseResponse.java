@@ -5,11 +5,11 @@ import com.arthur.easy_qa.domain.TestCaseStatus;
 import com.arthur.easy_qa.domain.TestCaseType;
 
 import java.time.Instant;
-import java.util.UUID;
 
 public class TestCaseResponse {
 
-    private UUID id;
+    private String projectKey;
+    private Long testCaseNumber;
     private String us;
     private TestCaseStatus status;
     private String feature;
@@ -20,7 +20,8 @@ public class TestCaseResponse {
     private Instant creationInstant;
     private Instant lastUpdateInstant;
 
-    public TestCaseResponse(UUID id,
+    public TestCaseResponse(String projectKey,
+                            Long testCaseNumber,
                             String us,
                             TestCaseStatus status,
                             String feature,
@@ -30,7 +31,8 @@ public class TestCaseResponse {
                             TestCaseType type,
                             Instant creationInstant,
                             Instant lastUpdateInstant) {
-        this.id = id;
+        this.projectKey = projectKey;
+        this.testCaseNumber = testCaseNumber;
         this.us = us;
         this.status = status;
         this.feature = feature;
@@ -42,8 +44,12 @@ public class TestCaseResponse {
         this.lastUpdateInstant = lastUpdateInstant;
     }
 
-    public UUID getId() {
-        return id;
+    public String getProjectKey() {
+        return projectKey;
+    }
+
+    public Long getTestCaseNumber() {
+        return testCaseNumber;
     }
 
     public String getUs() {

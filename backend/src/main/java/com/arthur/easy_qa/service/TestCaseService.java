@@ -1,26 +1,36 @@
 package com.arthur.easy_qa.service;
 
+import com.arthur.easy_qa.domain.Project;
 import com.arthur.easy_qa.domain.TestCase;
 import com.arthur.easy_qa.dto.testcase.CreateTestCaseRequest;
 import com.arthur.easy_qa.dto.testcase.TestCaseResponse;
+import com.arthur.easy_qa.repository.project.ProjectRepository;
 import com.arthur.easy_qa.repository.testcase.TestCaseRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
 @Service
 public class TestCaseService {
 
-    private final TestCaseRepository repository;
+    private final TestCaseRepository testCaseRepository;
+    private final ProjectRepository projectRepository;
 
-    public TestCaseService(TestCaseRepository repository) {
-        this.repository = repository;
+    public TestCaseService(TestCaseRepository testCaseRepository, ProjectRepository projectRepository) {
+        this.testCaseRepository = testCaseRepository;
+        this.projectRepository = projectRepository;
     }
 
-    public TestCaseResponse create(CreateTestCaseRequest request) {
+    public TestCaseResponse create(String projectKey, CreateTestCaseRequest request) {
+        Project project = projectRepository.findByKey(projectKey)
+                .orElseThrow(() -> new IllegalArgumentException("Project not found: " + projectKey));
+
+        Long nextNumber = testCaseRepository.findMaxTestCaseNumberByProjectKey(projectKey).orElse(0L) + 1L;
+
         TestCase testCase = new TestCase(
+                project,
+                nextNumber,
                 request.getUs(),
                 request.getStatus(),
                 request.getFeature(),
@@ -30,23 +40,24 @@ public class TestCaseService {
                 request.getType()
         );
 
-        repository.save(testCase);
+        testCaseRepository.save(testCase);
         return toResponse(testCase);
     }
 
-    public Optional<TestCaseResponse> getById(UUID uuid) {
-        return repository.findById(uuid).map(this::toResponse);
+    public Optional<TestCaseResponse> getByProjectAndNumber(String projectKey, Long testCaseNumber) {
+        return testCaseRepository.findByProjectKeyAndTestCaseNumber(projectKey, testCaseNumber)
+                .map(this::toResponse);
     }
 
-    public List<TestCaseResponse> getAll() {
-        return repository.findAll()
+    public List<TestCaseResponse> getAllByProject(String projectKey) {
+        return testCaseRepository.findAllByProjectKey(projectKey)
                 .stream()
                 .map(this::toResponse)
                 .toList();
     }
 
-    public Optional<TestCaseResponse> update(UUID uuid, CreateTestCaseRequest request) {
-        return repository.findById(uuid)
+    public Optional<TestCaseResponse> update(String projectKey, Long testCaseNumber, CreateTestCaseRequest request) {
+        return testCaseRepository.findByProjectKeyAndTestCaseNumber(projectKey, testCaseNumber)
                 .map(existing -> {
                     existing.setUs(request.getUs());
                     existing.setStatus(request.getStatus());
@@ -56,18 +67,19 @@ public class TestCaseService {
                     existing.setPriority(request.getPriority());
                     existing.setType(request.getType());
 
-                    repository.save(existing);
+                    testCaseRepository.save(existing);
                     return toResponse(existing);
                 });
     }
 
-    public boolean delete(UUID uuid) {
-        return repository.deleteById(uuid);
+    public boolean delete(String projectKey, Long testCaseNumber) {
+        return testCaseRepository.deleteByProjectKeyAndTestCaseNumber(projectKey, testCaseNumber);
     }
 
     private TestCaseResponse toResponse(TestCase testCase) {
         return new TestCaseResponse(
-                testCase.getId(),
+                testCase.getProject().getKey(),
+                testCase.getTestCaseNumber(),
                 testCase.getUs(),
                 testCase.getStatus(),
                 testCase.getFeature(),

@@ -15,6 +15,13 @@ public class TestCase {
     @UuidGenerator
     private UUID id;
 
+    @Column(nullable = false)
+    private Long testCaseNumber;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "project_id", nullable = false)
+    private Project project;
+
     private String us;
     private String feature;
     private String scenario;
@@ -32,10 +39,12 @@ public class TestCase {
     private Instant creationInstant;
     private Instant lastUpdateInstant;
 
-    protected TestCase(UUID uuid, String usName, TestCaseStatus finished, String featureName, String scenario, String description, TestCasePriority high, TestCaseType functional, Instant now, Instant nowed) {
+    protected TestCase() {
     }
 
     public TestCase(
+            Project project,
+            Long testCaseNumber,
             String us,
             TestCaseStatus status,
             String feature,
@@ -44,6 +53,8 @@ public class TestCase {
             TestCasePriority priority,
             TestCaseType type
     ) {
+        this.project = project;
+        this.testCaseNumber = testCaseNumber;
         this.us = us;
         this.status = status;
         this.feature = feature;
@@ -67,6 +78,22 @@ public class TestCase {
 
     public UUID getId() {
         return id;
+    }
+
+    public Project getProject() {
+        return project;
+    }
+
+    public void setProject(Project project) {
+        this.project = project;
+    }
+
+    public Long getTestCaseNumber() {
+        return testCaseNumber;
+    }
+
+    public void setTestCaseNumber(Long testCaseNumber) {
+        this.testCaseNumber = testCaseNumber;
     }
 
     public String getUs() {

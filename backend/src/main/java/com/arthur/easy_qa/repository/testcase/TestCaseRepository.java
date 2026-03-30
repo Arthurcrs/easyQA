@@ -4,15 +4,16 @@ import com.arthur.easy_qa.domain.TestCase;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
 public interface TestCaseRepository {
 
     TestCase save(TestCase testCase);
 
-    Optional<TestCase> findById(UUID id);
+    Optional<TestCase> findByProjectKeyAndTestCaseNumber(String projectKey, Long testCaseNumber);
 
-    List<TestCase> findAll();
+    List<TestCase> findAllByProjectKey(String projectKey);
 
-    boolean deleteById(UUID id);
+    boolean deleteByProjectKeyAndTestCaseNumber(String projectKey, Long testCaseNumber);
+
+    Optional<Long> findMaxTestCaseNumberByProjectKey(String projectKey);
 }

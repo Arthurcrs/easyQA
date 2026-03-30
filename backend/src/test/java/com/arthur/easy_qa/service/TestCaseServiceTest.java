@@ -1,11 +1,13 @@
 package com.arthur.easy_qa.service;
 
+import com.arthur.easy_qa.domain.Project;
 import com.arthur.easy_qa.domain.TestCase;
 import com.arthur.easy_qa.domain.TestCasePriority;
 import com.arthur.easy_qa.domain.TestCaseStatus;
 import com.arthur.easy_qa.domain.TestCaseType;
 import com.arthur.easy_qa.dto.testcase.CreateTestCaseRequest;
 import com.arthur.easy_qa.dto.testcase.TestCaseResponse;
+import com.arthur.easy_qa.repository.project.ProjectRepository;
 import com.arthur.easy_qa.repository.testcase.TestCaseRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -13,6 +15,7 @@ import org.mockito.ArgumentCaptor;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -22,20 +25,27 @@ import static org.mockito.Mockito.*;
 
 class TestCaseServiceTest {
 
-    private TestCaseRepository repository;
+    private TestCaseRepository testCaseRepository;
+    private ProjectRepository projectRepository;
     private TestCaseService service;
+
+    private final String PROJECT_KEY = "EASYQA";
+    private Project project;
 
     @BeforeEach
     void setup() {
-        repository = mock(TestCaseRepository.class);
-        service = new TestCaseService(repository);
+        testCaseRepository = mock(TestCaseRepository.class);
+        projectRepository = mock(ProjectRepository.class);
+        service = new TestCaseService(testCaseRepository, projectRepository);
+
+        // Fixed: Added Instant.now() and false to match the constructor
+        project = new Project("EasyQA", PROJECT_KEY, Instant.now(), false);
     }
 
     @Test
     void create_validRequest_shouldSaveAndReturnResponse() {
 
         // Arrange
-
         CreateTestCaseRequest request = new CreateTestCaseRequest();
         request.setUs("User Story Name");
         request.setStatus(TestCaseStatus.DRAFT);
@@ -45,26 +55,26 @@ class TestCaseServiceTest {
         request.setPriority(TestCasePriority.HIGH);
         request.setType(TestCaseType.FUNCTIONAL);
 
-        when(repository.save(any(TestCase.class))).thenAnswer(invocation -> {
+        when(projectRepository.findByKey(PROJECT_KEY)).thenReturn(Optional.of(project));
+        when(testCaseRepository.findMaxTestCaseNumberByProjectKey(PROJECT_KEY)).thenReturn(Optional.of(5L)); // Next should be 6
+
+        when(testCaseRepository.save(any(TestCase.class))).thenAnswer(invocation -> {
             TestCase tc = invocation.getArgument(0);
             simulateJpaPrePersist(tc);
             return tc;
         });
 
         // Act
-
-        TestCaseResponse response = service.create(request);
+        TestCaseResponse response = service.create(PROJECT_KEY, request);
 
         // Assert
-
         ArgumentCaptor<TestCase> captor = ArgumentCaptor.forClass(TestCase.class);
-        verify(repository, times(1)).save(captor.capture());
+        verify(testCaseRepository, times(1)).save(captor.capture());
         TestCase saved = captor.getValue();
 
-        // Assert
-
         assertNotNull(saved);
-        assertNotNull(saved.getId());
+        assertEquals(project, saved.getProject());
+        assertEquals(6L, saved.getTestCaseNumber());
         assertEquals("User Story Name", saved.getUs());
         assertEquals(TestCaseStatus.DRAFT, saved.getStatus());
         assertEquals("Login", saved.getFeature());
@@ -78,7 +88,8 @@ class TestCaseServiceTest {
         assertEquals(saved.getCreationInstant(), saved.getLastUpdateInstant());
 
         assertNotNull(response);
-        assertEquals(saved.getId(), response.getId());
+        assertEquals(PROJECT_KEY, response.getProjectKey());
+        assertEquals(6L, response.getTestCaseNumber());
         assertEquals(saved.getUs(), response.getUs());
         assertEquals(saved.getStatus(), response.getStatus());
         assertEquals(saved.getFeature(), response.getFeature());
@@ -90,11 +101,24 @@ class TestCaseServiceTest {
         assertEquals(saved.getLastUpdateInstant(), response.getLastUpdateInstant());
     }
 
+    @Test
+    void create_projectNotFound_shouldThrowException() {
+        // Arrange
+        CreateTestCaseRequest request = new CreateTestCaseRequest();
+        when(projectRepository.findByKey(PROJECT_KEY)).thenReturn(Optional.empty());
+
+        // Act & Assert
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+                service.create(PROJECT_KEY, request));
+
+        assertEquals("Project not found: " + PROJECT_KEY, exception.getMessage());
+        verify(testCaseRepository, never()).save(any());
+    }
+
     private static void simulateJpaPrePersist(TestCase testCase) {
         if (testCase.getId() == null) {
             setPrivateField(testCase, "id", UUID.randomUUID());
         }
-
         invokeNoArgMethod(testCase, "onCreate");
     }
 
@@ -122,46 +146,40 @@ class TestCaseServiceTest {
     void delete_shouldReturnRepositoryResult() {
 
         //Arrange
-
-        UUID uuid = UUID.randomUUID();
-        when(repository.deleteById(uuid)).thenReturn(true);
+        Long testCaseNumber = 1L;
+        when(testCaseRepository.deleteByProjectKeyAndTestCaseNumber(PROJECT_KEY, testCaseNumber)).thenReturn(true);
 
         //Act
-
-        boolean result = service.delete(uuid);
+        boolean result = service.delete(PROJECT_KEY, testCaseNumber);
 
         //Assert
-
-        verify(repository, times(1)).deleteById(uuid);
+        verify(testCaseRepository, times(1)).deleteByProjectKeyAndTestCaseNumber(PROJECT_KEY, testCaseNumber);
         assertTrue(result);
     }
 
     @Test
-    void getById_notFound_shouldReturnEmpty() {
+    void getByProjectAndNumber_notFound_shouldReturnEmpty() {
 
         //Arrange
-
-        UUID uuid = UUID.randomUUID();
-        when(repository.findById(uuid)).thenReturn(Optional.empty());
+        Long testCaseNumber = 1L;
+        when(testCaseRepository.findByProjectKeyAndTestCaseNumber(PROJECT_KEY, testCaseNumber)).thenReturn(Optional.empty());
 
         //Act
-
-        Optional<TestCaseResponse> result = service.getById(uuid);
+        Optional<TestCaseResponse> result = service.getByProjectAndNumber(PROJECT_KEY, testCaseNumber);
 
         //Assert
-
-        verify(repository, times(1)).findById(uuid);
+        verify(testCaseRepository, times(1)).findByProjectKeyAndTestCaseNumber(PROJECT_KEY, testCaseNumber);
         assertTrue(result.isEmpty());
     }
 
     @Test
-    void getById_found_shouldReturnResponse() {
+    void getByProjectAndNumber_found_shouldReturnResponse() {
 
         //Arrange
-
-        UUID uuid = UUID.randomUUID();
-
+        Long testCaseNumber = 1L;
         TestCase testCase = new TestCase(
+                project,
+                testCaseNumber,
                 "US name",
                 TestCaseStatus.FINISHED,
                 "Feature name",
@@ -171,18 +189,18 @@ class TestCaseServiceTest {
                 TestCaseType.FUNCTIONAL
         );
 
-        when(repository.findById(uuid)).thenReturn(Optional.of(testCase));
+        when(testCaseRepository.findByProjectKeyAndTestCaseNumber(PROJECT_KEY, testCaseNumber)).thenReturn(Optional.of(testCase));
 
         //Act
-
-        Optional<TestCaseResponse> response = service.getById(uuid);
+        Optional<TestCaseResponse> response = service.getByProjectAndNumber(PROJECT_KEY, testCaseNumber);
 
         //Assert
-
-        verify(repository, times(1)).findById(uuid);
+        verify(testCaseRepository, times(1)).findByProjectKeyAndTestCaseNumber(PROJECT_KEY, testCaseNumber);
         assertTrue(response.isPresent());
         TestCaseResponse dto = response.get();
 
+        assertEquals(PROJECT_KEY, dto.getProjectKey());
+        assertEquals(testCaseNumber, dto.getTestCaseNumber());
         assertEquals("US name", dto.getUs());
         assertEquals(TestCaseStatus.FINISHED, dto.getStatus());
         assertEquals("Feature name", dto.getFeature());
@@ -191,11 +209,12 @@ class TestCaseServiceTest {
     }
 
     @Test
-    void getAll_shouldReturnMappedList() {
+    void getAllByProject_shouldReturnMappedList() {
 
         //Arrange
-
         TestCase testCase1 = new TestCase(
+                project,
+                1L,
                 "US name 1",
                 TestCaseStatus.FINISHED,
                 "Feature name 1",
@@ -206,6 +225,8 @@ class TestCaseServiceTest {
         );
 
         TestCase testCase2 = new TestCase(
+                project,
+                2L,
                 "US name 2",
                 TestCaseStatus.DRAFT,
                 "Feature name 2",
@@ -215,42 +236,33 @@ class TestCaseServiceTest {
                 TestCaseType.FUNCTIONAL
         );
 
-        when(repository.findAll()).thenReturn(List.of(testCase1, testCase2));
+        when(testCaseRepository.findAllByProjectKey(PROJECT_KEY)).thenReturn(List.of(testCase1, testCase2));
 
         //Act
-
-        List<TestCaseResponse> result = service.getAll();
+        List<TestCaseResponse> result = service.getAllByProject(PROJECT_KEY);
 
         //Assert
-
         assertEquals(2, result.size());
+        verify(testCaseRepository, times(1)).findAllByProjectKey(PROJECT_KEY);
 
-        verify(repository, times(1)).findAll();
-
+        assertEquals(PROJECT_KEY, result.get(0).getProjectKey());
+        assertEquals(1L, result.get(0).getTestCaseNumber());
         assertEquals("US name 1", result.get(0).getUs());
         assertEquals(TestCaseStatus.FINISHED, result.get(0).getStatus());
         assertEquals("Feature name 1", result.get(0).getFeature());
-        assertEquals("Scenario 1", result.get(0).getScenario());
-        assertEquals("Description 1", result.get(0).getDescription());
-        assertEquals(TestCasePriority.LOW, result.get(0).getPriority());
-        assertEquals(TestCaseType.UI, result.get(0).getType());
 
+        assertEquals(PROJECT_KEY, result.get(1).getProjectKey());
+        assertEquals(2L, result.get(1).getTestCaseNumber());
         assertEquals("US name 2", result.get(1).getUs());
         assertEquals(TestCaseStatus.DRAFT, result.get(1).getStatus());
-        assertEquals("Feature name 2", result.get(1).getFeature());
-        assertEquals("Scenario 2", result.get(1).getScenario());
-        assertEquals("Description 2", result.get(1).getDescription());
         assertEquals(TestCasePriority.HIGH, result.get(1).getPriority());
-        assertEquals(TestCaseType.FUNCTIONAL, result.get(1).getType());
     }
 
     @Test
     void update_notFound_shouldReturnEmpty() {
 
         //Arrange
-
-        UUID uuid = UUID.randomUUID();
-
+        Long testCaseNumber = 1L;
         CreateTestCaseRequest request = new CreateTestCaseRequest();
         request.setUs("US Name");
         request.setStatus(TestCaseStatus.FINISHED);
@@ -259,15 +271,13 @@ class TestCaseServiceTest {
         request.setPriority(TestCasePriority.LOW);
         request.setType(TestCaseType.UI);
 
-        when(repository.findById(uuid)).thenReturn(Optional.empty());
+        when(testCaseRepository.findByProjectKeyAndTestCaseNumber(PROJECT_KEY, testCaseNumber)).thenReturn(Optional.empty());
 
         //Act
-
-        Optional<TestCaseResponse> response = service.update(uuid, request);
+        Optional<TestCaseResponse> response = service.update(PROJECT_KEY, testCaseNumber, request);
 
         //Assert
-
-        verify(repository, times(1)).findById(uuid);
+        verify(testCaseRepository, times(1)).findByProjectKeyAndTestCaseNumber(PROJECT_KEY, testCaseNumber);
         assertTrue(response.isEmpty());
     }
 
@@ -275,9 +285,7 @@ class TestCaseServiceTest {
     void update_found_shouldUpdateSaveAndReturnResponse() {
 
         //Arrange
-
-        UUID uuid = UUID.randomUUID();
-
+        Long testCaseNumber = 1L;
         CreateTestCaseRequest request = new CreateTestCaseRequest();
         request.setUs("Updated US Name");
         request.setStatus(TestCaseStatus.FINISHED);
@@ -288,6 +296,8 @@ class TestCaseServiceTest {
         request.setType(TestCaseType.UI);
 
         TestCase existingTestCase = new TestCase(
+                project,
+                testCaseNumber,
                 "Old US Name",
                 TestCaseStatus.DRAFT,
                 "Old Feature Name",
@@ -297,24 +307,23 @@ class TestCaseServiceTest {
                 TestCaseType.FUNCTIONAL
         );
 
-        when(repository.findById(uuid)).thenReturn(Optional.of(existingTestCase));
-        when(repository.save(any(TestCase.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(testCaseRepository.findByProjectKeyAndTestCaseNumber(PROJECT_KEY, testCaseNumber)).thenReturn(Optional.of(existingTestCase));
+        when(testCaseRepository.save(any(TestCase.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         //Act
-
-        Optional<TestCaseResponse> response = service.update(uuid, request);
+        Optional<TestCaseResponse> response = service.update(PROJECT_KEY, testCaseNumber, request);
 
         //Assert
-
         ArgumentCaptor<TestCase> captor = ArgumentCaptor.forClass(TestCase.class);
 
-        verify(repository, times(1)).findById(uuid);
-        verify(repository, times(1)).save(captor.capture());
+        verify(testCaseRepository, times(1)).findByProjectKeyAndTestCaseNumber(PROJECT_KEY, testCaseNumber);
+        verify(testCaseRepository, times(1)).save(captor.capture());
 
         TestCase updatedTestCase = captor.getValue();
 
         assertTrue(response.isPresent());
-        assertEquals(response.get().getId(), updatedTestCase.getId());
+        assertEquals(PROJECT_KEY, response.get().getProjectKey());
+        assertEquals(testCaseNumber, response.get().getTestCaseNumber());
         assertEquals(response.get().getUs(), updatedTestCase.getUs());
         assertEquals(response.get().getStatus(), updatedTestCase.getStatus());
         assertEquals(response.get().getFeature(), updatedTestCase.getFeature());

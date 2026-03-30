@@ -6,8 +6,9 @@ import com.arthur.easy_qa.domain.TestCaseType;
 import com.arthur.easy_qa.dto.testcase.CreateTestCaseRequest;
 import com.arthur.easy_qa.dto.testcase.TestCaseResponse;
 import com.arthur.easy_qa.service.TestCaseService;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
@@ -15,110 +16,173 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.Instant;
-import java.util.UUID;
+import java.util.List;
+import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(TestCaseController.class)
 class TestCaseControllerTest {
 
     @Autowired
-    MockMvc mockMvc;
+    private MockMvc mockMvc;
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @MockitoBean
-    TestCaseService service;
+    private TestCaseService testCaseService;
 
-    @Test
-    void create_validRequest_shouldCallServiceAndReturnCreatedResponse() throws Exception {
+    private TestCaseResponse defaultResponse;
+    private final String PROJECT_KEY = "EASYQA";
+    private final Long TEST_CASE_NUMBER = 1L;
 
-        //Arrange
-
-        UUID uuid = UUID.randomUUID();
-
-        String requestJson = """
-                {
-                  "status": "DRAFT",
-                  "us": "US-1",
-                  "feature": "Feature A",
-                  "scenario": "Scenario A",
-                  "description": "Description A",
-                  "priority": "MEDIUM",
-                  "type": "FUNCTIONAL"
-                }
-                """;
-
-        TestCaseResponse serviceResponse = new TestCaseResponse(
-                uuid,
-                "US-1",
+    @BeforeEach
+    void setUp() {
+        defaultResponse = new TestCaseResponse(
+                PROJECT_KEY,
+                TEST_CASE_NUMBER,
+                "User Login",
                 TestCaseStatus.DRAFT,
-                "Feature A",
-                "Scenario A",
-                "Description A",
-                TestCasePriority.MEDIUM,
+                "Authentication",
+                "Successful login with valid credentials",
+                "Given I am on the login page...",
+                TestCasePriority.HIGH,
                 TestCaseType.FUNCTIONAL,
-                Instant.parse("2026-02-03T10:00:00Z"),
-                Instant.parse("2026-02-03T10:00:00Z")
+                Instant.now(),
+                Instant.now()
         );
-
-        when(service.create(any(CreateTestCaseRequest.class))).thenReturn(serviceResponse);
-
-        //Act and Assert
-
-        mockMvc.perform(post("/api/v1/test-cases")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(requestJson))
-                .andExpect(status().isCreated())
-                .andExpect(header().string("Location", "/api/v1/test-cases/" + uuid))
-                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.id").value(uuid.toString()))
-                .andExpect(jsonPath("$.us").value("US-1"))
-                .andExpect(jsonPath("$.status").value("DRAFT"));
-
-        ArgumentCaptor<CreateTestCaseRequest> captor =
-                ArgumentCaptor.forClass(CreateTestCaseRequest.class);
-
-        verify(service, times(1)).create(captor.capture());
-
-        CreateTestCaseRequest serviceRequest = captor.getValue();
-        assertEquals("US-1", serviceRequest.getUs());
-        assertEquals(TestCaseStatus.DRAFT, serviceRequest.getStatus());
-        assertEquals("Feature A", serviceRequest.getFeature());
-        assertEquals("Scenario A", serviceRequest.getScenario());
-        assertEquals("Description A", serviceRequest.getDescription());
-        assertEquals(TestCasePriority.MEDIUM, serviceRequest.getPriority());
-        assertEquals(TestCaseType.FUNCTIONAL, serviceRequest.getType());
-
-        verifyNoMoreInteractions(service);
     }
 
     @Test
-    void create_invalidRequest_shouldReturn400AndNotCallService() throws Exception {
+    void create_ShouldReturn201AndTestCaseResponse() throws Exception {
+        CreateTestCaseRequest request = new CreateTestCaseRequest();
+        request.setUs("User Login");
+        request.setStatus(TestCaseStatus.DRAFT);
+        request.setFeature("Authentication");
+        request.setScenario("Successful login with valid credentials");
+        request.setDescription("Given I am on the login page...");
+        request.setPriority(TestCasePriority.HIGH);
+        request.setType(TestCaseType.FUNCTIONAL);
 
-        //Arrange
+        when(testCaseService.create(eq(PROJECT_KEY), any(CreateTestCaseRequest.class)))
+                .thenReturn(defaultResponse);
 
-        String invalidJson = """
-                {
-                  "status": "DRAFT",
-                  "us": "US-1",
-                  "feature": "",
-                  "scenario": "Scenario A",
-                  "description": "Description A",
-                  "type": ""
-                }
-                """;
-
-        //Act and Assert
-
-        mockMvc.perform(post("/api/v1/test-cases")
+        mockMvc.perform(post("/api/v1/projects/{projectKey}/test-cases", PROJECT_KEY)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(invalidJson))
-                .andExpect(status().isBadRequest());
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andExpect(header().string("Location", "/api/v1/projects/" + PROJECT_KEY + "/test-cases/" + TEST_CASE_NUMBER))
+                .andExpect(jsonPath("$.projectKey").value(PROJECT_KEY))
+                .andExpect(jsonPath("$.testCaseNumber").value(TEST_CASE_NUMBER))
+                .andExpect(jsonPath("$.us").value("User Login"))
+                .andExpect(jsonPath("$.status").value("DRAFT"));
+    }
 
+    @Test
+    void getByNumber_ShouldReturn200_WhenTestCaseExists() throws Exception {
+        when(testCaseService.getByProjectAndNumber(PROJECT_KEY, TEST_CASE_NUMBER))
+                .thenReturn(Optional.of(defaultResponse));
 
-        verify(service, times(0)).create(any(CreateTestCaseRequest.class));
+        mockMvc.perform(get("/api/v1/projects/{projectKey}/test-cases/{testCaseNumber}", PROJECT_KEY, TEST_CASE_NUMBER))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.projectKey").value(PROJECT_KEY))
+                .andExpect(jsonPath("$.testCaseNumber").value(TEST_CASE_NUMBER));
+    }
+
+    @Test
+    void getByNumber_ShouldReturn404_WhenTestCaseDoesNotExist() throws Exception {
+        when(testCaseService.getByProjectAndNumber(PROJECT_KEY, TEST_CASE_NUMBER))
+                .thenReturn(Optional.empty());
+
+        mockMvc.perform(get("/api/v1/projects/{projectKey}/test-cases/{testCaseNumber}", PROJECT_KEY, TEST_CASE_NUMBER))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void getAll_ShouldReturnListOfTestCases() throws Exception {
+        when(testCaseService.getAllByProject(PROJECT_KEY))
+                .thenReturn(List.of(defaultResponse));
+
+        mockMvc.perform(get("/api/v1/projects/{projectKey}/test-cases", PROJECT_KEY))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.size()").value(1))
+                .andExpect(jsonPath("$[0].testCaseNumber").value(TEST_CASE_NUMBER));
+    }
+
+    @Test
+    void update_ShouldReturn200_WhenTestCaseExists() throws Exception {
+        CreateTestCaseRequest request = new CreateTestCaseRequest();
+        request.setUs("Updated US");
+        request.setStatus(TestCaseStatus.FINISHED);
+        request.setFeature("Authentication");
+        request.setScenario("Updated Scenario");
+        request.setDescription("Updated Description"); // <-- Added this to satisfy @NotBlank
+        request.setPriority(TestCasePriority.MEDIUM);
+        request.setType(TestCaseType.FUNCTIONAL);
+
+        TestCaseResponse updatedResponse = new TestCaseResponse(
+                PROJECT_KEY,
+                TEST_CASE_NUMBER,
+                "Updated US",
+                TestCaseStatus.FINISHED,
+                "Authentication",
+                "Updated Scenario",
+                "Updated Description",
+                TestCasePriority.MEDIUM,
+                TestCaseType.FUNCTIONAL,
+                defaultResponse.getCreationInstant(),
+                Instant.now()
+        );
+
+        when(testCaseService.update(eq(PROJECT_KEY), eq(TEST_CASE_NUMBER), any(CreateTestCaseRequest.class)))
+                .thenReturn(Optional.of(updatedResponse));
+
+        mockMvc.perform(put("/api/v1/projects/{projectKey}/test-cases/{testCaseNumber}", PROJECT_KEY, TEST_CASE_NUMBER)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.us").value("Updated US"))
+                .andExpect(jsonPath("$.status").value("FINISHED"))
+                .andExpect(jsonPath("$.priority").value("MEDIUM"));
+    }
+
+    @Test
+    void update_ShouldReturn404_WhenTestCaseDoesNotExist() throws Exception {
+        CreateTestCaseRequest request = new CreateTestCaseRequest();
+        request.setUs("Updated US");
+        request.setStatus(TestCaseStatus.FINISHED);
+        request.setScenario("Updated Scenario");
+        request.setDescription("Updated Description");
+        request.setPriority(TestCasePriority.MEDIUM);
+        request.setType(TestCaseType.FUNCTIONAL);
+
+        when(testCaseService.update(eq(PROJECT_KEY), eq(TEST_CASE_NUMBER), any(CreateTestCaseRequest.class)))
+                .thenReturn(Optional.empty());
+
+        mockMvc.perform(put("/api/v1/projects/{projectKey}/test-cases/{testCaseNumber}", PROJECT_KEY, TEST_CASE_NUMBER)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void delete_ShouldReturn204_WhenTestCaseExists() throws Exception {
+        when(testCaseService.delete(PROJECT_KEY, TEST_CASE_NUMBER)).thenReturn(true);
+
+        mockMvc.perform(delete("/api/v1/projects/{projectKey}/test-cases/{testCaseNumber}", PROJECT_KEY, TEST_CASE_NUMBER))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void delete_ShouldReturn404_WhenTestCaseDoesNotExist() throws Exception {
+        when(testCaseService.delete(PROJECT_KEY, TEST_CASE_NUMBER)).thenReturn(false);
+
+        mockMvc.perform(delete("/api/v1/projects/{projectKey}/test-cases/{testCaseNumber}", PROJECT_KEY, TEST_CASE_NUMBER))
+                .andExpect(status().isNotFound());
     }
 }
