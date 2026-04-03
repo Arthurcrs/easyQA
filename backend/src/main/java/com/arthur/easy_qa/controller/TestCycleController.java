@@ -42,7 +42,7 @@ public class TestCycleController {
         return ResponseEntity.ok(service.getAllByProject(projectKey));
     }
 
-    @PutMapping("/{testCycleNumber}")
+    @PatchMapping("/{testCycleNumber}")
     public ResponseEntity<TestCycleResponse> update(@PathVariable("projectKey") String projectKey,
                                                     @PathVariable("testCycleNumber") Long testCycleNumber,
                                                     @Valid @RequestBody CreateTestCycleRequest request) {
