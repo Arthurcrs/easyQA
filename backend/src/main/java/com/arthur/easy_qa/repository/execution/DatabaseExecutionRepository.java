@@ -44,4 +44,9 @@ public class DatabaseExecutionRepository implements ExecutionRepository {
     public List<Execution> findAllByTestCycle(TestCycle testCycle) {
         return jpaRepository.findAllByTestCycle(testCycle);
     }
+
+    @Override
+    public Optional<Execution> findByProjectKeyAndExecutionNumber(String projectKey, Long executionNumber) {
+        return jpaRepository.findByProject_KeyAndExecutionNumber(projectKey, executionNumber);
+    }
 }

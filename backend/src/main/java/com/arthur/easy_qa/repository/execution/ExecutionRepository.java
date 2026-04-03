@@ -18,4 +18,6 @@ public interface ExecutionRepository {
     void deleteByProjectKeyAndCycleNumberAndCaseNumber(String projectKey, Long testCycleNumber, Long testCaseNumber);
 
     List<Execution> findAllByTestCycle(TestCycle testCycle);
+
+    Optional<Execution> findByProjectKeyAndExecutionNumber(String projectKey, Long executionNumber);
 }

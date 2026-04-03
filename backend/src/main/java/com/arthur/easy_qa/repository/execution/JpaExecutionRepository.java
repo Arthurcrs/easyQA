@@ -22,4 +22,6 @@ public interface JpaExecutionRepository extends JpaRepository<Execution, UUID> {
             String projectKey, Long testCycleNumber, Long testCaseNumber);
 
     List<Execution> findAllByTestCycle(TestCycle testCycle);
+
+    Optional<Execution> findByProject_KeyAndExecutionNumber(String projectKey, Long executionNumber);
 }
