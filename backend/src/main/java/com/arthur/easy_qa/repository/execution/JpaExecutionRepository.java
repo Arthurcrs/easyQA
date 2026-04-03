@@ -1,8 +1,10 @@
 package com.arthur.easy_qa.repository.execution;
 
 import com.arthur.easy_qa.domain.Execution;
+import com.arthur.easy_qa.domain.ExecutionStatus;
 import com.arthur.easy_qa.domain.TestCase;
 import com.arthur.easy_qa.domain.TestCycle;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -22,6 +24,12 @@ public interface JpaExecutionRepository extends JpaRepository<Execution, UUID> {
             String projectKey, Long testCycleNumber, Long testCaseNumber);
 
     List<Execution> findAllByTestCycle(TestCycle testCycle);
+
+    @Query("SELECT e FROM Execution e WHERE e.testCycle = :testCycle " +
+            "AND (:status IS NULL OR e.status = :status)")
+    List<Execution> findAllWithFilters(@Param("testCycle") TestCycle testCycle,
+                                       @Param("status") ExecutionStatus status,
+                                       Sort sort);
 
     Optional<Execution> findByProject_KeyAndExecutionNumber(String projectKey, Long executionNumber);
 }

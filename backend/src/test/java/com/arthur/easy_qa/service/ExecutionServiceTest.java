@@ -52,10 +52,10 @@ class ExecutionServiceTest {
         when(testCycleRepository.findByProjectKeyAndTestCycleNumber(PROJECT_KEY, 1L))
                 .thenReturn(Optional.of(testCycle));
 
-        when(executionRepository.findAllByTestCycle(testCycle))
+        when(executionRepository.findAllByTestCycleAndFilters(eq(testCycle), any(), any()))
                 .thenReturn(List.of(defaultExecution));
 
-        List<ExecutionResponse> result = service.getExecutionsByCycle(PROJECT_KEY, 1L);
+        List<ExecutionResponse> result = service.getExecutionsByCycle(PROJECT_KEY, 1L, null, null);
 
         assertEquals(1, result.size());
         assertEquals(5L, result.get(0).getExecutionNumber());
@@ -70,10 +70,30 @@ class ExecutionServiceTest {
                 .thenReturn(Optional.empty());
 
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
-                () -> service.getExecutionsByCycle(PROJECT_KEY, 1L));
+                () -> service.getExecutionsByCycle(PROJECT_KEY, 1L, null, null));
 
         assertEquals("Test Cycle not found", exception.getMessage());
-        verify(executionRepository, never()).findAllByTestCycle(any());
+        verify(executionRepository, never()).findAllByTestCycleAndFilters(any(), any(), any());
+    }
+
+    @Test
+    void getExecutionsByCycle_withSort_shouldPassSortToRepository() {
+        when(testCycleRepository.findByProjectKeyAndTestCycleNumber(PROJECT_KEY, 1L))
+                .thenReturn(Optional.of(testCycle));
+
+        when(executionRepository.findAllByTestCycleAndFilters(any(), any(), any()))
+                .thenReturn(List.of(defaultExecution));
+
+        service.getExecutionsByCycle(PROJECT_KEY, 1L, null, "status,desc");
+
+        org.springframework.data.domain.Sort sortCaptor = org.mockito.Mockito.mock(org.springframework.data.domain.Sort.class);
+        ArgumentCaptor<org.springframework.data.domain.Sort> captor = ArgumentCaptor.forClass(org.springframework.data.domain.Sort.class);
+
+        verify(executionRepository).findAllByTestCycleAndFilters(eq(testCycle), isNull(), captor.capture());
+
+        org.springframework.data.domain.Sort.Order order = captor.getValue().getOrderFor("status");
+        assertNotNull(order);
+        assertEquals(org.springframework.data.domain.Sort.Direction.DESC, order.getDirection());
     }
 
     @Test

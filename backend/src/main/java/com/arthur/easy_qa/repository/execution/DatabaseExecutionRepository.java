@@ -5,6 +5,8 @@ import com.arthur.easy_qa.domain.TestCase;
 import com.arthur.easy_qa.domain.TestCycle;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
+import com.arthur.easy_qa.domain.ExecutionStatus;
+import org.springframework.data.domain.Sort;
 
 import java.util.List;
 import java.util.Optional;
@@ -43,6 +45,11 @@ public class DatabaseExecutionRepository implements ExecutionRepository {
     @Override
     public List<Execution> findAllByTestCycle(TestCycle testCycle) {
         return jpaRepository.findAllByTestCycle(testCycle);
+    }
+
+    @Override
+    public List<Execution> findAllByTestCycleAndFilters(TestCycle testCycle, ExecutionStatus status, Sort sort) {
+        return jpaRepository.findAllWithFilters(testCycle, status, sort);
     }
 
     @Override

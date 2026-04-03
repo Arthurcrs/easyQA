@@ -135,7 +135,7 @@ class TestCycleControllerTest {
         when(testCycleService.update(eq(PROJECT_KEY), eq(TEST_CYCLE_NUMBER), any(CreateTestCycleRequest.class)))
                 .thenReturn(Optional.of(updatedResponse));
 
-        mockMvc.perform(put("/api/v1/projects/{projectKey}/test-cycles/{number}", PROJECT_KEY, TEST_CYCLE_NUMBER)
+        mockMvc.perform(patch("/api/v1/projects/{projectKey}/test-cycles/{number}", PROJECT_KEY, TEST_CYCLE_NUMBER)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -150,7 +150,7 @@ class TestCycleControllerTest {
         when(testCycleService.update(eq(PROJECT_KEY), eq(TEST_CYCLE_NUMBER), any(CreateTestCycleRequest.class)))
                 .thenReturn(Optional.empty());
 
-        mockMvc.perform(put("/api/v1/projects/{projectKey}/test-cycles/{number}", PROJECT_KEY, TEST_CYCLE_NUMBER)
+        mockMvc.perform(patch("/api/v1/projects/{projectKey}/test-cycles/{number}", PROJECT_KEY, TEST_CYCLE_NUMBER)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isNotFound());

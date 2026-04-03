@@ -1,5 +1,6 @@
 package com.arthur.easy_qa.controller;
 
+import com.arthur.easy_qa.domain.ExecutionStatus;
 import com.arthur.easy_qa.dto.execution.ExecutionResponse;
 import com.arthur.easy_qa.dto.execution.UpdateExecutionRequest;
 import com.arthur.easy_qa.service.ExecutionService;
@@ -20,9 +21,12 @@ public class ExecutionController {
     }
 
     @GetMapping("/test-cycles/{testCycleNumber}/executions")
-    public ResponseEntity<List<ExecutionResponse>> getByCycle(@PathVariable("projectKey") String projectKey,
-                                                              @PathVariable("testCycleNumber") Long testCycleNumber) {
-        return ResponseEntity.ok(service.getExecutionsByCycle(projectKey, testCycleNumber));
+    public ResponseEntity<List<ExecutionResponse>> getByCycle(
+            @PathVariable("projectKey") String projectKey,
+            @PathVariable("testCycleNumber") Long testCycleNumber,
+            @RequestParam(value = "status", required = false) ExecutionStatus status,
+            @RequestParam(value = "sort", required = false) String sort) {
+        return ResponseEntity.ok(service.getExecutionsByCycle(projectKey, testCycleNumber, status, sort));
     }
 
     @GetMapping("/executions/{executionNumber}")

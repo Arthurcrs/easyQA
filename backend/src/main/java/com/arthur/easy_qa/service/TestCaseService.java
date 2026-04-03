@@ -64,8 +64,12 @@ public class TestCaseService {
                 .map(this::toResponse);
     }
 
-    public List<TestCaseResponse> getAllByProject(String projectKey) {
-        return testCaseRepository.findAllByProjectKey(projectKey)
+    public List<TestCaseResponse> getAllByProject(String projectKey,
+                                                  TestCaseStatus status,
+                                                  TestCaseType type,
+                                                  TestCasePriority priority,
+                                                  String q) {
+        return testCaseRepository.findAllByProjectKeyAndFilters(projectKey, status, type, priority, q)
                 .stream()
                 .map(this::toResponse)
                 .toList();

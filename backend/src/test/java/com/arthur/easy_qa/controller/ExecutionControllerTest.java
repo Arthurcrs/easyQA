@@ -55,7 +55,7 @@ class ExecutionControllerTest {
 
     @Test
     void getByCycle_ShouldReturn200AndListOfExecutions() throws Exception {
-        when(executionService.getExecutionsByCycle(PROJECT_KEY, TEST_CYCLE_NUMBER))
+        when(executionService.getExecutionsByCycle(eq(PROJECT_KEY), eq(TEST_CYCLE_NUMBER), any(), any()))
                 .thenReturn(List.of(defaultResponse));
 
         mockMvc.perform(get("/api/v1/projects/{projectKey}/test-cycles/{cycleNumber}/executions", PROJECT_KEY, TEST_CYCLE_NUMBER))

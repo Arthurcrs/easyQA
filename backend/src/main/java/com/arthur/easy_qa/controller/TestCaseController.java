@@ -1,5 +1,8 @@
 package com.arthur.easy_qa.controller;
 
+import com.arthur.easy_qa.domain.TestCasePriority;
+import com.arthur.easy_qa.domain.TestCaseStatus;
+import com.arthur.easy_qa.domain.TestCaseType;
 import com.arthur.easy_qa.dto.testcase.CreateTestCaseRequest;
 import com.arthur.easy_qa.dto.testcase.TestCaseResponse;
 import com.arthur.easy_qa.service.TestCaseService;
@@ -38,8 +41,13 @@ public class TestCaseController {
     }
 
     @GetMapping
-    public ResponseEntity<List<TestCaseResponse>> getAll(@PathVariable("projectKey") String projectKey) {
-        return ResponseEntity.ok(service.getAllByProject(projectKey));
+    public ResponseEntity<List<TestCaseResponse>> getAll(
+            @PathVariable("projectKey") String projectKey,
+            @RequestParam(value = "status", required = false) TestCaseStatus status,
+            @RequestParam(value = "type", required = false) TestCaseType type,
+            @RequestParam(value = "priority", required = false) TestCasePriority priority,
+            @RequestParam(value = "q", required = false) String q) {
+        return ResponseEntity.ok(service.getAllByProject(projectKey, status, type, priority, q));
     }
 
     @PatchMapping("/{testCaseNumber}")

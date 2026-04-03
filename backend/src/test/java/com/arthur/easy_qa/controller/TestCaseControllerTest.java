@@ -108,7 +108,7 @@ class TestCaseControllerTest {
 
     @Test
     void getAll_ShouldReturnListOfTestCases() throws Exception {
-        when(testCaseService.getAllByProject(PROJECT_KEY)).thenReturn(List.of(defaultResponse));
+        when(testCaseService.getAllByProject(eq(PROJECT_KEY), any(), any(), any(), any())).thenReturn(List.of(defaultResponse));
 
         mockMvc.perform(get("/api/v1/projects/{projectKey}/test-cases", PROJECT_KEY))
                 .andExpect(status().isOk())
@@ -136,7 +136,7 @@ class TestCaseControllerTest {
         when(testCaseService.update(eq(PROJECT_KEY), eq(TEST_CASE_NUMBER), any(CreateTestCaseRequest.class)))
                 .thenReturn(Optional.of(updatedResponse));
 
-        mockMvc.perform(put("/api/v1/projects/{projectKey}/test-cases/{number}", PROJECT_KEY, TEST_CASE_NUMBER)
+        mockMvc.perform(patch("/api/v1/projects/{projectKey}/test-cases/{number}", PROJECT_KEY, TEST_CASE_NUMBER)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())

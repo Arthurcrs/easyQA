@@ -1,6 +1,9 @@
 package com.arthur.easy_qa.repository.testcase;
 
 import com.arthur.easy_qa.domain.TestCase;
+import com.arthur.easy_qa.domain.TestCasePriority;
+import com.arthur.easy_qa.domain.TestCaseStatus;
+import com.arthur.easy_qa.domain.TestCaseType;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -39,6 +42,15 @@ public class DatabaseTestCaseRepository implements TestCaseRepository {
             return true;
         }
         return false;
+    }
+
+    @Override
+    public List<TestCase> findAllByProjectKeyAndFilters(String projectKey,
+                                                        TestCaseStatus status,
+                                                        TestCaseType type,
+                                                        TestCasePriority priority,
+                                                        String q) {
+        return jpaRepository.findAllWithFilters(projectKey, status, type, priority, q);
     }
 
     @Override

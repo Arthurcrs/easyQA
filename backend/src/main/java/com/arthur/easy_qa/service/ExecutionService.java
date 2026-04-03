@@ -7,6 +7,8 @@ import com.arthur.easy_qa.dto.execution.UpdateExecutionRequest;
 import com.arthur.easy_qa.repository.execution.ExecutionRepository;
 import com.arthur.easy_qa.repository.testcycle.TestCycleRepository;
 import org.springframework.stereotype.Service;
+import com.arthur.easy_qa.domain.ExecutionStatus;
+import org.springframework.data.domain.Sort;
 
 import java.util.List;
 import java.util.Optional;
@@ -22,11 +24,20 @@ public class ExecutionService {
         this.testCycleRepository = testCycleRepository;
     }
 
-    public List<ExecutionResponse> getExecutionsByCycle(String projectKey, Long testCycleNumber) {
+    public List<ExecutionResponse> getExecutionsByCycle(String projectKey, Long testCycleNumber, ExecutionStatus status, String sortParam) {
         TestCycle cycle = testCycleRepository.findByProjectKeyAndTestCycleNumber(projectKey, testCycleNumber)
                 .orElseThrow(() -> new IllegalArgumentException("Test Cycle not found"));
 
-        return executionRepository.findAllByTestCycle(cycle)
+        Sort sort = Sort.unsorted();
+        if (sortParam != null && !sortParam.isBlank()) {
+            String[] sortArgs = sortParam.split(",");
+            String property = sortArgs[0];
+            Sort.Direction direction = (sortArgs.length > 1 && sortArgs[1].equalsIgnoreCase("desc"))
+                    ? Sort.Direction.DESC : Sort.Direction.ASC;
+            sort = Sort.by(direction, property);
+        }
+
+        return executionRepository.findAllByTestCycleAndFilters(cycle, status, sort)
                 .stream()
                 .map(this::toResponse)
                 .toList();
