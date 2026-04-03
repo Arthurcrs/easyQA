@@ -1,7 +1,7 @@
 package com.arthur.easy_qa.controller;
 
-import com.arthur.easy_qa.domain.BugSeverity;
-import com.arthur.easy_qa.domain.BugStatus;
+import com.arthur.easy_qa.domain.bug.BugSeverity;
+import com.arthur.easy_qa.domain.bug.BugStatus;
 import com.arthur.easy_qa.dto.bug.BugDetailsResponse;
 import com.arthur.easy_qa.dto.bug.BugResponse;
 import com.arthur.easy_qa.dto.bug.CreateBugRequest;

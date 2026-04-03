@@ -1,7 +1,7 @@
 package com.arthur.easy_qa.dto.bug;
 
-import com.arthur.easy_qa.domain.BugSeverity;
-import com.arthur.easy_qa.domain.BugStatus;
+import com.arthur.easy_qa.domain.bug.BugSeverity;
+import com.arthur.easy_qa.domain.bug.BugStatus;
 import com.arthur.easy_qa.dto.execution.ExecutionResponse;
 
 import java.time.Instant;

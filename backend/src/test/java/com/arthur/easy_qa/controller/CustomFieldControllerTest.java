@@ -1,6 +1,6 @@
 package com.arthur.easy_qa.controller;
 
-import com.arthur.easy_qa.domain.CustomFieldType;
+import com.arthur.easy_qa.domain.customfield.CustomFieldType;
 import com.arthur.easy_qa.dto.customfield.CreateCustomFieldRequest;
 import com.arthur.easy_qa.dto.customfield.CustomFieldResponse;
 import com.arthur.easy_qa.service.CustomFieldService;

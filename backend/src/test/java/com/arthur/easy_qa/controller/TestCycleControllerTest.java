@@ -1,6 +1,6 @@
 package com.arthur.easy_qa.controller;
 
-import com.arthur.easy_qa.domain.ExecutionStatus;
+import com.arthur.easy_qa.domain.execution.ExecutionStatus;
 import com.arthur.easy_qa.dto.testcycle.CreateTestCycleRequest;
 import com.arthur.easy_qa.dto.testcycle.TestCycleDetailsResponse;
 import com.arthur.easy_qa.dto.testcycle.TestCycleResponse;

@@ -1,11 +1,11 @@
 package com.arthur.easy_qa.repository.execution;
 
-import com.arthur.easy_qa.domain.Execution;
-import com.arthur.easy_qa.domain.TestCase;
-import com.arthur.easy_qa.domain.TestCycle;
+import com.arthur.easy_qa.domain.execution.Execution;
+import com.arthur.easy_qa.domain.testcase.TestCase;
+import com.arthur.easy_qa.domain.testcycle.TestCycle;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
-import com.arthur.easy_qa.domain.ExecutionStatus;
+import com.arthur.easy_qa.domain.execution.ExecutionStatus;
 import org.springframework.data.domain.Sort;
 
 import java.util.List;

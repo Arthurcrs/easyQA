@@ -1,6 +1,6 @@
 package com.arthur.easy_qa.dto.execution;
 
-import com.arthur.easy_qa.domain.ExecutionStatus;
+import com.arthur.easy_qa.domain.execution.ExecutionStatus;
 import jakarta.validation.constraints.NotNull;
 
 public class UpdateExecutionRequest {

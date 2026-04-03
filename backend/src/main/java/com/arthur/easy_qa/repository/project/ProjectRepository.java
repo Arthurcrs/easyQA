@@ -1,6 +1,6 @@
 package com.arthur.easy_qa.repository.project;
 
-import com.arthur.easy_qa.domain.Project;
+import com.arthur.easy_qa.domain.project.Project;
 
 import java.util.List;
 import java.util.Optional;

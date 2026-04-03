@@ -1,6 +1,6 @@
 package com.arthur.easy_qa.repository.project;
 
-import com.arthur.easy_qa.domain.Project;
+import com.arthur.easy_qa.domain.project.Project;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

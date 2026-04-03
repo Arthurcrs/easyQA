@@ -1,6 +1,8 @@
 package com.arthur.easy_qa.service;
 
-import com.arthur.easy_qa.domain.*;
+import com.arthur.easy_qa.domain.customfield.CustomField;
+import com.arthur.easy_qa.domain.project.Project;
+import com.arthur.easy_qa.domain.testcase.*;
 import com.arthur.easy_qa.dto.testcase.CreateTestCaseRequest;
 import com.arthur.easy_qa.dto.testcase.TestCaseResponse;
 import com.arthur.easy_qa.repository.customfield.CustomFieldRepository;

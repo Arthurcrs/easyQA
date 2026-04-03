@@ -1,6 +1,13 @@
 package com.arthur.easy_qa.service;
 
-import com.arthur.easy_qa.domain.*;
+import com.arthur.easy_qa.domain.execution.Execution;
+import com.arthur.easy_qa.domain.execution.ExecutionStatus;
+import com.arthur.easy_qa.domain.project.Project;
+import com.arthur.easy_qa.domain.testcase.TestCase;
+import com.arthur.easy_qa.domain.testcase.TestCasePriority;
+import com.arthur.easy_qa.domain.testcase.TestCaseStatus;
+import com.arthur.easy_qa.domain.testcase.TestCaseType;
+import com.arthur.easy_qa.domain.testcycle.TestCycle;
 import com.arthur.easy_qa.dto.testcycle.CreateTestCycleRequest;
 import com.arthur.easy_qa.dto.testcycle.TestCycleDetailsResponse;
 import com.arthur.easy_qa.dto.testcycle.TestCycleResponse;

@@ -1,9 +1,9 @@
 package com.arthur.easy_qa.service;
 
-import com.arthur.easy_qa.domain.Bug;
-import com.arthur.easy_qa.domain.BugSeverity;
-import com.arthur.easy_qa.domain.BugStatus;
-import com.arthur.easy_qa.domain.Project;
+import com.arthur.easy_qa.domain.bug.Bug;
+import com.arthur.easy_qa.domain.bug.BugSeverity;
+import com.arthur.easy_qa.domain.bug.BugStatus;
+import com.arthur.easy_qa.domain.project.Project;
 import com.arthur.easy_qa.dto.bug.BugResponse;
 import com.arthur.easy_qa.dto.bug.CreateBugRequest;
 import com.arthur.easy_qa.repository.bug.BugRepository;

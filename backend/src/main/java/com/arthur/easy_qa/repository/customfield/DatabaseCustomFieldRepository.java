@@ -1,6 +1,6 @@
 package com.arthur.easy_qa.repository.customfield;
 
-import com.arthur.easy_qa.domain.CustomField;
+import com.arthur.easy_qa.domain.customfield.CustomField;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 

@@ -1,5 +1,6 @@
-package com.arthur.easy_qa.domain;
+package com.arthur.easy_qa.domain.testcase;
 
+import com.arthur.easy_qa.domain.project.Project;
 import jakarta.persistence.*;
 import org.hibernate.annotations.UuidGenerator;
 

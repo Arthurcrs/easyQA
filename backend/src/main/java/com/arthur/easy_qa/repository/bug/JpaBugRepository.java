@@ -1,8 +1,8 @@
 package com.arthur.easy_qa.repository.bug;
 
-import com.arthur.easy_qa.domain.Bug;
-import com.arthur.easy_qa.domain.BugSeverity;
-import com.arthur.easy_qa.domain.BugStatus;
+import com.arthur.easy_qa.domain.bug.Bug;
+import com.arthur.easy_qa.domain.bug.BugSeverity;
+import com.arthur.easy_qa.domain.bug.BugStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

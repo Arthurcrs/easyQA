@@ -1,15 +1,15 @@
 package com.arthur.easy_qa.service;
 
-import com.arthur.easy_qa.domain.Execution;
-import com.arthur.easy_qa.domain.TestCycle;
+import com.arthur.easy_qa.domain.execution.Execution;
+import com.arthur.easy_qa.domain.testcycle.TestCycle;
 import com.arthur.easy_qa.dto.execution.ExecutionResponse;
 import com.arthur.easy_qa.dto.execution.UpdateExecutionRequest;
 import com.arthur.easy_qa.repository.execution.ExecutionRepository;
 import com.arthur.easy_qa.repository.testcycle.TestCycleRepository;
 import org.springframework.stereotype.Service;
-import com.arthur.easy_qa.domain.ExecutionStatus;
+import com.arthur.easy_qa.domain.execution.ExecutionStatus;
 import org.springframework.data.domain.Sort;
-import com.arthur.easy_qa.domain.Bug;
+import com.arthur.easy_qa.domain.bug.Bug;
 import com.arthur.easy_qa.repository.bug.BugRepository;
 
 import java.util.List;

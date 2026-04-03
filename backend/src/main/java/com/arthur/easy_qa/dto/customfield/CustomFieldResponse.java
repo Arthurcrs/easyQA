@@ -1,6 +1,6 @@
 package com.arthur.easy_qa.dto.customfield;
 
-import com.arthur.easy_qa.domain.CustomFieldType;
+import com.arthur.easy_qa.domain.customfield.CustomFieldType;
 
 public class CustomFieldResponse {
 

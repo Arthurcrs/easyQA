@@ -1,8 +1,8 @@
 package com.arthur.easy_qa.controller;
 
-import com.arthur.easy_qa.domain.TestCasePriority;
-import com.arthur.easy_qa.domain.TestCaseStatus;
-import com.arthur.easy_qa.domain.TestCaseType;
+import com.arthur.easy_qa.domain.testcase.TestCasePriority;
+import com.arthur.easy_qa.domain.testcase.TestCaseStatus;
+import com.arthur.easy_qa.domain.testcase.TestCaseType;
 import com.arthur.easy_qa.dto.testcase.CreateTestCaseRequest;
 import com.arthur.easy_qa.dto.testcase.TestCaseResponse;
 import com.arthur.easy_qa.service.TestCaseService;

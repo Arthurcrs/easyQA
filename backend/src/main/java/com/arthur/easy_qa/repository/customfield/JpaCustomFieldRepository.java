@@ -1,6 +1,6 @@
 package com.arthur.easy_qa.repository.customfield;
 
-import com.arthur.easy_qa.domain.CustomField;
+import com.arthur.easy_qa.domain.customfield.CustomField;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

@@ -1,6 +1,6 @@
 package com.arthur.easy_qa.controller;
 
-import com.arthur.easy_qa.domain.ExecutionStatus;
+import com.arthur.easy_qa.domain.execution.ExecutionStatus;
 import com.arthur.easy_qa.dto.execution.ExecutionResponse;
 import com.arthur.easy_qa.dto.execution.UpdateExecutionRequest;
 import com.arthur.easy_qa.service.ExecutionService;

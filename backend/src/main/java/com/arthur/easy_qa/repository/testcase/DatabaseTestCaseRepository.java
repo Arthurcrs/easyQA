@@ -1,9 +1,9 @@
 package com.arthur.easy_qa.repository.testcase;
 
-import com.arthur.easy_qa.domain.TestCase;
-import com.arthur.easy_qa.domain.TestCasePriority;
-import com.arthur.easy_qa.domain.TestCaseStatus;
-import com.arthur.easy_qa.domain.TestCaseType;
+import com.arthur.easy_qa.domain.testcase.TestCase;
+import com.arthur.easy_qa.domain.testcase.TestCasePriority;
+import com.arthur.easy_qa.domain.testcase.TestCaseStatus;
+import com.arthur.easy_qa.domain.testcase.TestCaseType;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 

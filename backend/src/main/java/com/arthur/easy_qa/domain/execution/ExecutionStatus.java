@@ -1,4 +1,4 @@
-package com.arthur.easy_qa.domain;
+package com.arthur.easy_qa.domain.execution;
 
 public enum ExecutionStatus {
     PASS,

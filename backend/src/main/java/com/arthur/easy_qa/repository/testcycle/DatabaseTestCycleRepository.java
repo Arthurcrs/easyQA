@@ -1,6 +1,6 @@
 package com.arthur.easy_qa.repository.testcycle;
 
-import com.arthur.easy_qa.domain.TestCycle;
+import com.arthur.easy_qa.domain.testcycle.TestCycle;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
