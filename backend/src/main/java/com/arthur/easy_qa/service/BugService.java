@@ -9,6 +9,9 @@ import com.arthur.easy_qa.dto.bug.CreateBugRequest;
 import com.arthur.easy_qa.repository.bug.BugRepository;
 import com.arthur.easy_qa.repository.project.ProjectRepository;
 import org.springframework.stereotype.Service;
+import com.arthur.easy_qa.dto.bug.BugDetailsResponse;
+import com.arthur.easy_qa.dto.execution.ExecutionResponse;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -46,9 +49,32 @@ public class BugService {
         return toResponse(bug);
     }
 
-    public Optional<BugResponse> getByProjectAndNumber(String projectKey, Long bugNumber) {
+    @Transactional(readOnly = true)
+    public Optional<BugDetailsResponse> getByProjectAndNumber(String projectKey, Long bugNumber) {
         return bugRepository.findByProjectKeyAndBugNumber(projectKey, bugNumber)
-                .map(this::toResponse);
+                .map(bug -> {
+                    List<ExecutionResponse> executionResponses = bug.getLinkedExecutions().stream()
+                            .map(e -> new ExecutionResponse(
+                                    e.getProject().getKey(),
+                                    e.getTestCycle().getTestCycleNumber(),
+                                    e.getTestCase().getTestCaseNumber(),
+                                    e.getExecutionNumber(),
+                                    e.getTestCase().getUs(),
+                                    e.getStatus()
+                            )).toList();
+
+                    return new BugDetailsResponse(
+                            bug.getProject().getKey(),
+                            bug.getBugNumber(),
+                            bug.getTitle(),
+                            bug.getDescription(),
+                            bug.getStatus(),
+                            bug.getSeverity(),
+                            bug.getOpenDate(),
+                            bug.getCloseDate(),
+                            executionResponses
+                    );
+                });
     }
 
     public List<BugResponse> getAllByProject(String projectKey, BugStatus status, BugSeverity severity) {

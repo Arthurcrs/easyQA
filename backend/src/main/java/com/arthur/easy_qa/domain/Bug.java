@@ -5,6 +5,8 @@ import org.hibernate.annotations.UuidGenerator;
 
 import java.time.Instant;
 import java.util.UUID;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "bugs")
@@ -40,6 +42,9 @@ public class Bug {
     private Instant openDate;
 
     private Instant closeDate;
+
+    @ManyToMany(mappedBy = "linkedBugs")
+    private Set<Execution> linkedExecutions = new HashSet<>();
 
     protected Bug() {
     }
@@ -122,5 +127,9 @@ public class Bug {
 
     public Instant getCloseDate() {
         return closeDate;
+    }
+
+    public Set<Execution> getLinkedExecutions() {
+        return linkedExecutions;
     }
 }

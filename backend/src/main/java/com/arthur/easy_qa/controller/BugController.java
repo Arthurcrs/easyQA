@@ -2,6 +2,7 @@ package com.arthur.easy_qa.controller;
 
 import com.arthur.easy_qa.domain.BugSeverity;
 import com.arthur.easy_qa.domain.BugStatus;
+import com.arthur.easy_qa.dto.bug.BugDetailsResponse;
 import com.arthur.easy_qa.dto.bug.BugResponse;
 import com.arthur.easy_qa.dto.bug.CreateBugRequest;
 import com.arthur.easy_qa.service.BugService;
@@ -32,8 +33,8 @@ public class BugController {
     }
 
     @GetMapping("/{bugNumber}")
-    public ResponseEntity<BugResponse> getByNumber(@PathVariable("projectKey") String projectKey,
-                                                   @PathVariable("bugNumber") Long bugNumber) {
+    public ResponseEntity<BugDetailsResponse> getByNumber(@PathVariable("projectKey") String projectKey,
+                                                          @PathVariable("bugNumber") Long bugNumber) {
         return service.getByProjectAndNumber(projectKey, bugNumber)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());

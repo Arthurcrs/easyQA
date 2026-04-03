@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import org.hibernate.annotations.UuidGenerator;
 
 import java.util.UUID;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "executions")
@@ -32,6 +34,14 @@ public class Execution {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private ExecutionStatus status;
+
+    @ManyToMany
+    @JoinTable(
+            name = "execution_bugs",
+            joinColumns = @JoinColumn(name = "execution_id"),
+            inverseJoinColumns = @JoinColumn(name = "bug_id")
+    )
+    private Set<Bug> linkedBugs = new HashSet<>();
 
     protected Execution() {
     }
@@ -74,5 +84,19 @@ public class Execution {
 
     public void setStatus(ExecutionStatus status) {
         this.status = status;
+    }
+
+    public Set<Bug> getLinkedBugs() {
+        return linkedBugs;
+    }
+
+    public void addBug(Bug bug) {
+        this.linkedBugs.add(bug);
+        bug.getLinkedExecutions().add(this);
+    }
+
+    public void removeBug(Bug bug) {
+        this.linkedBugs.remove(bug);
+        bug.getLinkedExecutions().remove(this);
     }
 }
