@@ -2,6 +2,7 @@ package com.arthur.easy_qa.service;
 
 import com.arthur.easy_qa.domain.*;
 import com.arthur.easy_qa.dto.testcycle.CreateTestCycleRequest;
+import com.arthur.easy_qa.dto.testcycle.TestCycleDetailsResponse;
 import com.arthur.easy_qa.dto.testcycle.TestCycleResponse;
 import com.arthur.easy_qa.repository.execution.ExecutionRepository;
 import com.arthur.easy_qa.repository.project.ProjectRepository;
@@ -191,5 +192,31 @@ class TestCycleServiceTest {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Test
+    void getDetailsByProjectAndNumber_found_shouldReturnDetailedResponse() {
+        when(testCycleRepository.findByProjectKeyAndTestCycleNumber(PROJECT_KEY, 1L))
+                .thenReturn(Optional.of(defaultCycle));
+
+        Execution exec1 = new Execution(project, 10L, defaultCycle, defaultTestCase);
+        exec1.setStatus(ExecutionStatus.PASS);
+
+        Execution exec2 = new Execution(project, 11L, defaultCycle, defaultTestCase);
+        exec2.setStatus(ExecutionStatus.FAIL);
+
+        when(executionRepository.findAllByTestCycle(defaultCycle)).thenReturn(List.of(exec1, exec2));
+
+        Optional<TestCycleDetailsResponse> response = service.getDetailsByProjectAndNumber(PROJECT_KEY, 1L);
+
+        assertTrue(response.isPresent());
+        assertEquals(1L, response.get().getTestCycleNumber());
+        assertEquals(2, response.get().getExecutions().size());
+
+        java.util.Map<ExecutionStatus, Long> summary = response.get().getProgressSummary();
+        assertEquals(1L, summary.get(ExecutionStatus.PASS));
+        assertEquals(1L, summary.get(ExecutionStatus.FAIL));
+        assertEquals(0L, summary.get(ExecutionStatus.NOT_EXECUTED));
+        assertEquals(0L, summary.get(ExecutionStatus.BLOCKED));
     }
 }

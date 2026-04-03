@@ -1,6 +1,7 @@
 package com.arthur.easy_qa.controller;
 
 import com.arthur.easy_qa.dto.testcycle.CreateTestCycleRequest;
+import com.arthur.easy_qa.dto.testcycle.TestCycleDetailsResponse;
 import com.arthur.easy_qa.dto.testcycle.TestCycleResponse;
 import com.arthur.easy_qa.service.TestCycleService;
 import jakarta.validation.Valid;
@@ -30,9 +31,9 @@ public class TestCycleController {
     }
 
     @GetMapping("/{testCycleNumber}")
-    public ResponseEntity<TestCycleResponse> getByNumber(@PathVariable("projectKey") String projectKey,
-                                                         @PathVariable("testCycleNumber") Long testCycleNumber) {
-        return service.getByProjectAndNumber(projectKey, testCycleNumber)
+    public ResponseEntity<TestCycleDetailsResponse> getByNumber(@PathVariable("projectKey") String projectKey,
+                                                                @PathVariable("testCycleNumber") Long testCycleNumber) {
+        return service.getDetailsByProjectAndNumber(projectKey, testCycleNumber)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }

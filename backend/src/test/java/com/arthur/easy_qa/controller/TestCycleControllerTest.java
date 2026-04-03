@@ -1,6 +1,8 @@
 package com.arthur.easy_qa.controller;
 
+import com.arthur.easy_qa.domain.ExecutionStatus;
 import com.arthur.easy_qa.dto.testcycle.CreateTestCycleRequest;
+import com.arthur.easy_qa.dto.testcycle.TestCycleDetailsResponse;
 import com.arthur.easy_qa.dto.testcycle.TestCycleResponse;
 import com.arthur.easy_qa.service.TestCycleService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -88,18 +90,33 @@ class TestCycleControllerTest {
 
     @Test
     void getByNumber_ShouldReturn200_WhenCycleExists() throws Exception {
-        when(testCycleService.getByProjectAndNumber(PROJECT_KEY, TEST_CYCLE_NUMBER))
-                .thenReturn(Optional.of(defaultResponse));
+        TestCycleDetailsResponse detailsResponse = new TestCycleDetailsResponse(
+                PROJECT_KEY,
+                TEST_CYCLE_NUMBER,
+                "Release 1.0",
+                "v1.0.0",
+                "Production",
+                "Regression",
+                Instant.now(),
+                Instant.now(),
+                java.util.Map.of(ExecutionStatus.PASS, 5L, ExecutionStatus.FAIL, 1L),
+                List.of()
+        );
+
+        when(testCycleService.getDetailsByProjectAndNumber(PROJECT_KEY, TEST_CYCLE_NUMBER))
+                .thenReturn(Optional.of(detailsResponse));
 
         mockMvc.perform(get("/api/v1/projects/{projectKey}/test-cycles/{number}", PROJECT_KEY, TEST_CYCLE_NUMBER))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.testCycleNumber").value(TEST_CYCLE_NUMBER))
-                .andExpect(jsonPath("$.name").value("Release 1.0"));
+                .andExpect(jsonPath("$.name").value("Release 1.0"))
+                .andExpect(jsonPath("$.progressSummary.PASS").value(5))
+                .andExpect(jsonPath("$.progressSummary.FAIL").value(1));
     }
 
     @Test
     void getByNumber_ShouldReturn404_WhenCycleDoesNotExist() throws Exception {
-        when(testCycleService.getByProjectAndNumber(PROJECT_KEY, TEST_CYCLE_NUMBER))
+        when(testCycleService.getDetailsByProjectAndNumber(PROJECT_KEY, TEST_CYCLE_NUMBER))
                 .thenReturn(Optional.empty());
 
         mockMvc.perform(get("/api/v1/projects/{projectKey}/test-cycles/{number}", PROJECT_KEY, TEST_CYCLE_NUMBER))

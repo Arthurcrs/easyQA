@@ -11,6 +11,13 @@ import com.arthur.easy_qa.repository.project.ProjectRepository;
 import com.arthur.easy_qa.repository.testcase.TestCaseRepository;
 import com.arthur.easy_qa.repository.testcycle.TestCycleRepository;
 import org.springframework.stereotype.Service;
+import com.arthur.easy_qa.domain.ExecutionStatus;
+import com.arthur.easy_qa.dto.execution.ExecutionResponse;
+import com.arthur.easy_qa.dto.testcycle.TestCycleDetailsResponse;
+
+import java.util.EnumMap;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import java.util.List;
 import java.util.Optional;
@@ -85,14 +92,12 @@ public class TestCycleService {
         TestCycle cycle = repository.findByProjectKeyAndTestCycleNumber(projectKey, testCycleNumber)
                 .orElseThrow(() -> new IllegalArgumentException("Test Cycle not found"));
 
-        // Fetch the max execution number once before the loop to optimize performance
         Long currentExecNumber = executionRepository.findMaxExecutionNumberByProjectKey(projectKey).orElse(0L);
 
         for (Long tcNumber : testCaseNumbers) {
             TestCase testCase = testCaseRepository.findByProjectKeyAndTestCaseNumber(projectKey, tcNumber)
                     .orElseThrow(() -> new IllegalArgumentException("Test Case not found: " + tcNumber));
 
-            // Check if execution already exists to prevent duplicates
             boolean exists = executionRepository.existsByTestCycleAndTestCase(cycle, testCase);
             if (!exists) {
                 currentExecNumber++;
@@ -144,5 +149,43 @@ public class TestCycleService {
                 testCycle.getCreationInstant(),
                 testCycle.getLastUpdateInstant()
         );
+    }
+
+    public Optional<TestCycleDetailsResponse> getDetailsByProjectAndNumber(String projectKey, Long testCycleNumber) {
+        return repository.findByProjectKeyAndTestCycleNumber(projectKey, testCycleNumber)
+                .map(cycle -> {
+                    List<Execution> executions = executionRepository.findAllByTestCycle(cycle);
+
+                    List<ExecutionResponse> executionResponses = executions.stream()
+                            .map(e -> new ExecutionResponse(
+                                    e.getProject().getKey(),
+                                    e.getTestCycle().getTestCycleNumber(),
+                                    e.getTestCase().getTestCaseNumber(),
+                                    e.getExecutionNumber(),
+                                    e.getTestCase().getUs(),
+                                    e.getStatus()
+                            )).toList();
+
+                    Map<ExecutionStatus, Long> counts = executions.stream()
+                            .collect(Collectors.groupingBy(Execution::getStatus, Collectors.counting()));
+
+                    Map<ExecutionStatus, Long> progressSummary = new EnumMap<>(ExecutionStatus.class);
+                    for (ExecutionStatus status : ExecutionStatus.values()) {
+                        progressSummary.put(status, counts.getOrDefault(status, 0L));
+                    }
+
+                    return new TestCycleDetailsResponse(
+                            cycle.getProject().getKey(),
+                            cycle.getTestCycleNumber(),
+                            cycle.getName(),
+                            cycle.getVersion(),
+                            cycle.getEnvironment(),
+                            cycle.getType(),
+                            cycle.getCreationInstant(),
+                            cycle.getLastUpdateInstant(),
+                            progressSummary,
+                            executionResponses
+                    );
+                });
     }
 }
