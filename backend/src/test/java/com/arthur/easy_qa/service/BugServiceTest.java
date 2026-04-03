@@ -4,6 +4,7 @@ import com.arthur.easy_qa.domain.Bug;
 import com.arthur.easy_qa.domain.BugSeverity;
 import com.arthur.easy_qa.domain.BugStatus;
 import com.arthur.easy_qa.domain.Project;
+import com.arthur.easy_qa.dto.bug.BugDetailsResponse;
 import com.arthur.easy_qa.dto.bug.BugResponse;
 import com.arthur.easy_qa.dto.bug.CreateBugRequest;
 import com.arthur.easy_qa.repository.bug.BugRepository;
@@ -62,7 +63,7 @@ class BugServiceTest {
         assertEquals(1L, response.getBugNumber());
         assertEquals("Login page crashes", response.getTitle());
         assertEquals(BugSeverity.HIGH, response.getSeverity());
-        assertEquals(BugStatus.OPEN, response.getStatus()); // Should default to OPEN
+        assertEquals(BugStatus.OPEN, response.getStatus());
         assertNotNull(response.getOpenDate());
         verify(bugRepository, times(1)).save(any(Bug.class));
     }
@@ -77,12 +78,14 @@ class BugServiceTest {
 
     @Test
     void getByProjectAndNumber_found_shouldReturnResponse() {
-        when(bugRepository.findByProjectKeyAndBugNumber(PROJECT_KEY, 1L)).thenReturn(Optional.of(defaultBug));
+        when(bugRepository.findByProjectKeyAndBugNumber(PROJECT_KEY, 1L))
+                .thenReturn(Optional.of(defaultBug));
 
-        Optional<BugResponse> response = service.getByProjectAndNumber(PROJECT_KEY, 1L);
+        Optional<BugDetailsResponse> response = service.getByProjectAndNumber(PROJECT_KEY, 1L);
 
         assertTrue(response.isPresent());
         assertEquals(1L, response.get().getBugNumber());
+        assertTrue(response.get().getLinkedExecutions().isEmpty());
     }
 
     @Test

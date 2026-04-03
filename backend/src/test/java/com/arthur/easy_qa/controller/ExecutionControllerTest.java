@@ -13,6 +13,10 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import static org.mockito.Mockito.verify;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -126,5 +130,27 @@ class ExecutionControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void linkBug_ShouldReturn200() throws Exception {
+        Long bugNumber = 10L;
+
+        mockMvc.perform(post("/api/v1/projects/{projectKey}/executions/{executionNumber}/bugs/{bugNumber}",
+                        PROJECT_KEY, EXECUTION_NUMBER, bugNumber))
+                .andExpect(status().isOk());
+
+        verify(executionService).linkBug(PROJECT_KEY, EXECUTION_NUMBER, bugNumber);
+    }
+
+    @Test
+    void unlinkBug_ShouldReturn204() throws Exception {
+        Long bugNumber = 10L;
+
+        mockMvc.perform(delete("/api/v1/projects/{projectKey}/executions/{executionNumber}/bugs/{bugNumber}",
+                        PROJECT_KEY, EXECUTION_NUMBER, bugNumber))
+                .andExpect(status().isNoContent());
+
+        verify(executionService).unlinkBug(PROJECT_KEY, EXECUTION_NUMBER, bugNumber);
     }
 }

@@ -2,6 +2,7 @@ package com.arthur.easy_qa.controller;
 
 import com.arthur.easy_qa.domain.BugSeverity;
 import com.arthur.easy_qa.domain.BugStatus;
+import com.arthur.easy_qa.dto.bug.BugDetailsResponse;
 import com.arthur.easy_qa.dto.bug.BugResponse;
 import com.arthur.easy_qa.dto.bug.CreateBugRequest;
 import com.arthur.easy_qa.service.BugService;
@@ -79,11 +80,25 @@ class BugControllerTest {
 
     @Test
     void getByNumber_ShouldReturn200_WhenBugExists() throws Exception {
-        when(bugService.getByProjectAndNumber(PROJECT_KEY, BUG_NUMBER)).thenReturn(Optional.of(defaultResponse));
+        BugDetailsResponse detailsResponse = new BugDetailsResponse(
+                PROJECT_KEY,
+                BUG_NUMBER,
+                "Login crashes",
+                defaultResponse.getDescription(),
+                defaultResponse.getStatus(),
+                defaultResponse.getSeverity(),
+                defaultResponse.getOpenDate(),
+                defaultResponse.getCloseDate(),
+                java.util.List.of()
+        );
+
+        when(bugService.getByProjectAndNumber(PROJECT_KEY, BUG_NUMBER))
+                .thenReturn(Optional.of(detailsResponse));
 
         mockMvc.perform(get("/api/v1/projects/{projectKey}/bugs/{bugNumber}", PROJECT_KEY, BUG_NUMBER))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.title").value("Login crashes"));
+                .andExpect(jsonPath("$.title").value("Login crashes"))
+                .andExpect(jsonPath("$.linkedExecutions").isArray()); // Verify the new array is present
     }
 
     @Test

@@ -45,4 +45,20 @@ public class ExecutionController {
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
+
+    @PostMapping("/executions/{executionNumber}/bugs/{bugNumber}")
+    public ResponseEntity<Void> linkBug(@PathVariable("projectKey") String projectKey,
+                                        @PathVariable("executionNumber") Long executionNumber,
+                                        @PathVariable("bugNumber") Long bugNumber) {
+        service.linkBug(projectKey, executionNumber, bugNumber);
+        return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping("/executions/{executionNumber}/bugs/{bugNumber}")
+    public ResponseEntity<Void> unlinkBug(@PathVariable("projectKey") String projectKey,
+                                          @PathVariable("executionNumber") Long executionNumber,
+                                          @PathVariable("bugNumber") Long bugNumber) {
+        service.unlinkBug(projectKey, executionNumber, bugNumber);
+        return ResponseEntity.noContent().build();
+    }
 }

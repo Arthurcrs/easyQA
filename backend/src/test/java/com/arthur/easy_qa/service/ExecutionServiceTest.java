@@ -8,6 +8,7 @@ import com.arthur.easy_qa.repository.testcycle.TestCycleRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import com.arthur.easy_qa.repository.bug.BugRepository;
 
 import java.time.Instant;
 import java.util.List;
@@ -21,6 +22,7 @@ class ExecutionServiceTest {
 
     private ExecutionRepository executionRepository;
     private TestCycleRepository testCycleRepository;
+    private BugRepository bugRepository; // NEW MOCK
     private ExecutionService service;
 
     private final String PROJECT_KEY = "EASYQA";
@@ -33,7 +35,9 @@ class ExecutionServiceTest {
     void setup() {
         executionRepository = mock(ExecutionRepository.class);
         testCycleRepository = mock(TestCycleRepository.class);
-        service = new ExecutionService(executionRepository, testCycleRepository);
+        bugRepository = mock(BugRepository.class);
+
+        service = new ExecutionService(executionRepository, testCycleRepository, bugRepository);
 
         project = new Project("EasyQA", PROJECT_KEY, Instant.now(), false);
 

@@ -9,6 +9,8 @@ import com.arthur.easy_qa.repository.testcycle.TestCycleRepository;
 import org.springframework.stereotype.Service;
 import com.arthur.easy_qa.domain.ExecutionStatus;
 import org.springframework.data.domain.Sort;
+import com.arthur.easy_qa.domain.Bug;
+import com.arthur.easy_qa.repository.bug.BugRepository;
 
 import java.util.List;
 import java.util.Optional;
@@ -18,10 +20,14 @@ public class ExecutionService {
 
     private final ExecutionRepository executionRepository;
     private final TestCycleRepository testCycleRepository;
+    private final BugRepository bugRepository;
 
-    public ExecutionService(ExecutionRepository executionRepository, TestCycleRepository testCycleRepository) {
+    public ExecutionService(ExecutionRepository executionRepository,
+                            TestCycleRepository testCycleRepository,
+                            BugRepository bugRepository) {
         this.executionRepository = executionRepository;
         this.testCycleRepository = testCycleRepository;
+        this.bugRepository = bugRepository;
     }
 
     public List<ExecutionResponse> getExecutionsByCycle(String projectKey, Long testCycleNumber, ExecutionStatus status, String sortParam) {
@@ -66,5 +72,27 @@ public class ExecutionService {
                 execution.getTestCase().getUs(),
                 execution.getStatus()
         );
+    }
+
+    public void linkBug(String projectKey, Long executionNumber, Long bugNumber) {
+        Execution execution = executionRepository.findByProjectKeyAndExecutionNumber(projectKey, executionNumber)
+                .orElseThrow(() -> new IllegalArgumentException("Execution not found: " + executionNumber));
+
+        Bug bug = bugRepository.findByProjectKeyAndBugNumber(projectKey, bugNumber)
+                .orElseThrow(() -> new IllegalArgumentException("Bug not found: " + bugNumber));
+
+        execution.addBug(bug);
+        executionRepository.save(execution);
+    }
+
+    public void unlinkBug(String projectKey, Long executionNumber, Long bugNumber) {
+        Execution execution = executionRepository.findByProjectKeyAndExecutionNumber(projectKey, executionNumber)
+                .orElseThrow(() -> new IllegalArgumentException("Execution not found: " + executionNumber));
+
+        Bug bug = bugRepository.findByProjectKeyAndBugNumber(projectKey, bugNumber)
+                .orElseThrow(() -> new IllegalArgumentException("Bug not found: " + bugNumber));
+
+        execution.removeBug(bug);
+        executionRepository.save(execution);
     }
 }
