@@ -6,21 +6,32 @@ import com.arthur.easy_qa.domain.TestCaseType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class CreateTestCaseRequest {
 
-    @NotNull
-    TestCaseStatus status;
-    @NotNull
+    @NotNull(message = "Status is required")
+    private TestCaseStatus status;
+
+    @NotBlank(message = "User Story is required")
     private String us;
+
     private String feature;
-    @NotBlank
+
+    @NotBlank(message = "Scenario is required")
     private String scenario;
-    @NotBlank
-    String description;
-    @NotNull
+
+    @NotBlank(message = "Description is required")
+    private String description;
+
+    @NotNull(message = "Priority is required")
     private TestCasePriority priority;
-    @NotNull
-    TestCaseType type;
+
+    @NotNull(message = "Type is required")
+    private TestCaseType type;
+
+    private Map<Long, String> customFields = new HashMap<>();
 
     public CreateTestCaseRequest() {
     }
@@ -79,5 +90,13 @@ public class CreateTestCaseRequest {
 
     public void setType(TestCaseType type) {
         this.type = type;
+    }
+
+    public Map<Long, String> getCustomFields() {
+        return customFields;
+    }
+
+    public void setCustomFields(Map<Long, String> customFields) {
+        this.customFields = customFields;
     }
 }

@@ -1,25 +1,35 @@
 package com.arthur.easy_qa.service;
 
-import com.arthur.easy_qa.domain.Project;
-import com.arthur.easy_qa.domain.TestCase;
+import com.arthur.easy_qa.domain.*;
 import com.arthur.easy_qa.dto.testcase.CreateTestCaseRequest;
 import com.arthur.easy_qa.dto.testcase.TestCaseResponse;
+import com.arthur.easy_qa.repository.customfield.CustomFieldRepository;
+import com.arthur.easy_qa.repository.customfield.TestCaseFieldValueRepository;
 import com.arthur.easy_qa.repository.project.ProjectRepository;
 import com.arthur.easy_qa.repository.testcase.TestCaseRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class TestCaseService {
 
     private final TestCaseRepository testCaseRepository;
     private final ProjectRepository projectRepository;
+    private final CustomFieldRepository customFieldRepository;
+    private final TestCaseFieldValueRepository fieldValueRepository;
 
-    public TestCaseService(TestCaseRepository testCaseRepository, ProjectRepository projectRepository) {
+    public TestCaseService(TestCaseRepository testCaseRepository,
+                           ProjectRepository projectRepository,
+                           CustomFieldRepository customFieldRepository,
+                           TestCaseFieldValueRepository fieldValueRepository) {
         this.testCaseRepository = testCaseRepository;
         this.projectRepository = projectRepository;
+        this.customFieldRepository = customFieldRepository;
+        this.fieldValueRepository = fieldValueRepository;
     }
 
     public TestCaseResponse create(String projectKey, CreateTestCaseRequest request) {
@@ -41,6 +51,11 @@ public class TestCaseService {
         );
 
         testCaseRepository.save(testCase);
+
+        if (request.getCustomFields() != null && !request.getCustomFields().isEmpty()) {
+            saveCustomFields(projectKey, testCase, request.getCustomFields());
+        }
+
         return toResponse(testCase);
     }
 
@@ -68,6 +83,11 @@ public class TestCaseService {
                     existing.setType(request.getType());
 
                     testCaseRepository.save(existing);
+
+                    if (request.getCustomFields() != null) {
+                        saveCustomFields(projectKey, existing, request.getCustomFields());
+                    }
+
                     return toResponse(existing);
                 });
     }
@@ -76,19 +96,43 @@ public class TestCaseService {
         return testCaseRepository.deleteByProjectKeyAndTestCaseNumber(projectKey, testCaseNumber);
     }
 
+    private void saveCustomFields(String projectKey, TestCase testCase, Map<Long, String> customFields) {
+        for (Map.Entry<Long, String> entry : customFields.entrySet()) {
+            Long fieldNumber = entry.getKey();
+            String value = entry.getValue();
+
+            CustomField customField = customFieldRepository.findByProjectKeyAndFieldNumber(projectKey, fieldNumber)
+                    .orElseThrow(() -> new IllegalArgumentException("Custom field not found: " + fieldNumber));
+
+            TestCaseFieldValue fieldValue = fieldValueRepository.findByTestCaseAndCustomField(testCase, customField)
+                    .orElse(new TestCaseFieldValue(testCase, customField, value));
+
+            fieldValue.setValue(value);
+            fieldValueRepository.save(fieldValue);
+        }
+    }
+
     private TestCaseResponse toResponse(TestCase testCase) {
+        Map<String, String> customFieldValues = fieldValueRepository.findAllByTestCase(testCase)
+                .stream()
+                .collect(Collectors.toMap(
+                        fv -> fv.getCustomField().getName(),
+                        TestCaseFieldValue::getValue
+                ));
+
         return new TestCaseResponse(
                 testCase.getProject().getKey(),
                 testCase.getTestCaseNumber(),
                 testCase.getUs(),
-                testCase.getStatus(),
                 testCase.getFeature(),
                 testCase.getScenario(),
                 testCase.getDescription(),
+                testCase.getStatus(),
                 testCase.getPriority(),
                 testCase.getType(),
                 testCase.getCreationInstant(),
-                testCase.getLastUpdateInstant()
+                testCase.getLastUpdateInstant(),
+                customFieldValues
         );
     }
 }
