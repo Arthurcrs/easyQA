@@ -2,8 +2,10 @@ package com.arthur.easy_qa.service;
 
 import com.arthur.easy_qa.domain.customfield.CustomField;
 import com.arthur.easy_qa.domain.customfield.CustomFieldType;
+import com.arthur.easy_qa.domain.execution.Execution;
 import com.arthur.easy_qa.domain.project.Project;
 import com.arthur.easy_qa.domain.testcase.*;
+import com.arthur.easy_qa.domain.testcycle.TestCycle;
 import com.arthur.easy_qa.dto.testcase.CreateTestCaseRequest;
 import com.arthur.easy_qa.dto.testcase.TestCaseResponse;
 import com.arthur.easy_qa.repository.customfield.CustomFieldRepository;
@@ -152,8 +154,29 @@ class TestCaseServiceTest {
 
     @Test
     void delete_shouldReturnRepositoryResult() {
+        when(testCaseRepository.findByProjectKeyAndTestCaseNumber(PROJECT_KEY, 1L))
+                .thenReturn(Optional.of(defaultTestCase));
+
         when(testCaseRepository.deleteByProjectKeyAndTestCaseNumber(PROJECT_KEY, 1L)).thenReturn(true);
+
         assertTrue(service.delete(PROJECT_KEY, 1L));
         verify(testCaseRepository).deleteByProjectKeyAndTestCaseNumber(PROJECT_KEY, 1L);
+    }
+
+    @Test
+    void delete_shouldThrowException_whenTestCaseHasExecutions() {
+        when(testCaseRepository.findByProjectKeyAndTestCaseNumber(PROJECT_KEY, 1L))
+                .thenReturn(Optional.of(defaultTestCase));
+
+        TestCycle dummyCycle = new TestCycle(project, 1L, "Release", "v1", "Prod", "Reg");
+        Execution mockExecution = new Execution(project, 1L, dummyCycle, defaultTestCase);
+        defaultTestCase.getExecutions().add(mockExecution);
+
+        IllegalStateException exception = assertThrows(IllegalStateException.class, () -> {
+            service.delete(PROJECT_KEY, 1L);
+        });
+
+        assertEquals("Cannot delete test case: it has execution history in a test cycle.", exception.getMessage());
+        verify(testCaseRepository, never()).deleteByProjectKeyAndTestCaseNumber(anyString(), anyLong());
     }
 }

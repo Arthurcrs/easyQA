@@ -3,7 +3,13 @@ package com.arthur.easy_qa.service;
 import com.arthur.easy_qa.domain.bug.Bug;
 import com.arthur.easy_qa.domain.bug.BugSeverity;
 import com.arthur.easy_qa.domain.bug.BugStatus;
+import com.arthur.easy_qa.domain.execution.Execution;
 import com.arthur.easy_qa.domain.project.Project;
+import com.arthur.easy_qa.domain.testcase.TestCase;
+import com.arthur.easy_qa.domain.testcase.TestCasePriority;
+import com.arthur.easy_qa.domain.testcase.TestCaseStatus;
+import com.arthur.easy_qa.domain.testcase.TestCaseType;
+import com.arthur.easy_qa.domain.testcycle.TestCycle;
 import com.arthur.easy_qa.dto.bug.BugDetailsResponse;
 import com.arthur.easy_qa.dto.bug.BugResponse;
 import com.arthur.easy_qa.dto.bug.CreateBugRequest;
@@ -119,6 +125,9 @@ class BugServiceTest {
 
     @Test
     void delete_shouldReturnRepositoryResult() {
+        when(bugRepository.findByProjectKeyAndBugNumber(PROJECT_KEY, 1L))
+                .thenReturn(Optional.of(defaultBug));
+
         when(bugRepository.deleteByProjectKeyAndBugNumber(PROJECT_KEY, 1L)).thenReturn(true);
 
         assertTrue(service.delete(PROJECT_KEY, 1L));
@@ -139,5 +148,26 @@ class BugServiceTest {
                 throw new RuntimeException("Failed to simulate JPA PrePersist", e);
             }
         }
+    }
+
+    @Test
+    void delete_shouldThrowException_whenBugHasLinkedExecutions() {
+        when(bugRepository.findByProjectKeyAndBugNumber(PROJECT_KEY, 1L))
+                .thenReturn(Optional.of(defaultBug));
+
+        TestCycle dummyCycle = new TestCycle(project, 1L, "Release", "v1", "Prod", "Reg");
+        TestCase dummyTestCase = new TestCase(
+                project, 1L, "US-1", TestCaseStatus.DRAFT, "F", "S", "D",
+                TestCasePriority.LOW, TestCaseType.UI);
+
+        Execution mockExecution = new Execution(project, 1L, dummyCycle, dummyTestCase);
+        defaultBug.getLinkedExecutions().add(mockExecution);
+
+        IllegalStateException exception = assertThrows(IllegalStateException.class, () -> {
+            service.delete(PROJECT_KEY, 1L);
+        });
+
+        assertEquals("Cannot delete bug: it is currently linked to one or more executions.", exception.getMessage());
+        verify(bugRepository, never()).deleteByProjectKeyAndBugNumber(anyString(), anyLong());
     }
 }
