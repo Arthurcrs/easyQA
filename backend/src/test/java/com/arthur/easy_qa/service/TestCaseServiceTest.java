@@ -59,7 +59,7 @@ class TestCaseServiceTest {
                 TestCasePriority.HIGH, TestCaseType.FUNCTIONAL
         );
 
-        browserField = new CustomField(project, 10L, "Browser", CustomFieldType.DROPDOWN, "Chrome,Firefox");
+        browserField = new CustomField(project, 10L, "Browser", CustomFieldType.DROPDOWN);
     }
 
     @Test

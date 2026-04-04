@@ -1,7 +1,6 @@
 package com.arthur.easy_qa.controller;
 
-import com.arthur.easy_qa.dto.customfield.CreateCustomFieldRequest;
-import com.arthur.easy_qa.dto.customfield.CustomFieldResponse;
+import com.arthur.easy_qa.dto.customfield.*;
 import com.arthur.easy_qa.service.CustomFieldService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -9,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/projects/{projectKey}/custom-fields")
@@ -47,5 +47,37 @@ public class CustomFieldController {
                                        @PathVariable("fieldNumber") Long fieldNumber) {
         boolean deleted = service.delete(projectKey, fieldNumber);
         return deleted ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
+    }
+
+    @PatchMapping("/{fieldNumber}")
+    public ResponseEntity<CustomFieldResponse> update(@PathVariable("projectKey") String projectKey,
+                                                      @PathVariable("fieldNumber") Long fieldNumber,
+                                                      @RequestBody CreateCustomFieldRequest request) {
+        return service.update(projectKey, fieldNumber, request)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    @PostMapping("/{fieldNumber}/options")
+    public ResponseEntity<CustomFieldOptionResponse> createOption(@PathVariable("projectKey") String projectKey,
+                                                                  @PathVariable("fieldNumber") Long fieldNumber,
+                                                                  @Valid @RequestBody CreateFieldOptionRequest request) {
+        return ResponseEntity.ok(service.addOption(projectKey, fieldNumber, request));
+    }
+
+    @PatchMapping("/{fieldNumber}/options/{optionId}")
+    public ResponseEntity<CustomFieldOptionResponse> updateOption(@PathVariable("projectKey") String projectKey,
+                                                                  @PathVariable("fieldNumber") Long fieldNumber,
+                                                                  @PathVariable("optionId") UUID optionId,
+                                                                  @Valid @RequestBody UpdateFieldOptionRequest request) {
+        return ResponseEntity.ok(service.updateOption(projectKey, fieldNumber, optionId, request));
+    }
+
+    @DeleteMapping("/{fieldNumber}/options/{optionId}")
+    public ResponseEntity<Void> deleteOption(@PathVariable("projectKey") String projectKey,
+                                             @PathVariable("fieldNumber") Long fieldNumber,
+                                             @PathVariable("optionId") UUID optionId) {
+        service.deleteOption(projectKey, fieldNumber, optionId);
+        return ResponseEntity.noContent().build();
     }
 }

@@ -10,6 +10,7 @@ import com.arthur.easy_qa.repository.customfield.TestCaseFieldValueRepository;
 import com.arthur.easy_qa.repository.project.ProjectRepository;
 import com.arthur.easy_qa.repository.testcase.TestCaseRepository;
 import org.springframework.stereotype.Service;
+import com.arthur.easy_qa.domain.testcase.TestCaseFieldValue;
 
 import java.util.List;
 import java.util.Map;
@@ -140,5 +141,31 @@ public class TestCaseService {
                 testCase.getLastUpdateInstant(),
                 customFieldValues
         );
+    }
+
+    public Map<String, String> getCustomFields(String projectKey, Long testCaseNumber) {
+        TestCase testCase = testCaseRepository.findByProjectKeyAndTestCaseNumber(projectKey, testCaseNumber)
+                .orElseThrow(() -> new IllegalArgumentException("Test Case not found"));
+
+        return fieldValueRepository.findAllByTestCase(testCase)
+                .stream()
+                .collect(Collectors.toMap(
+                        fv -> fv.getCustomField().getName(),
+                        TestCaseFieldValue::getValue
+                ));
+    }
+
+    public void updateCustomFields(String projectKey, Long testCaseNumber, Map<Long, String> customFields) {
+        TestCase testCase = testCaseRepository.findByProjectKeyAndTestCaseNumber(projectKey, testCaseNumber)
+                .orElseThrow(() -> new IllegalArgumentException("Test Case not found"));
+
+        List<TestCaseFieldValue> existingValues = fieldValueRepository.findAllByTestCase(testCase);
+        for (TestCaseFieldValue value : existingValues) {
+            if (!customFields.containsKey(value.getCustomField().getFieldNumber())) {
+                fieldValueRepository.delete(value);
+            }
+        }
+
+        saveCustomFields(projectKey, testCase, customFields);
     }
 }

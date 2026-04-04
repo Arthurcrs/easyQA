@@ -2,16 +2,21 @@ package com.arthur.easy_qa.dto.customfield;
 
 import com.arthur.easy_qa.domain.customfield.CustomFieldType;
 
+import java.util.List;
+
 public class CustomFieldResponse {
 
     private String projectKey;
     private Long fieldNumber;
     private String name;
     private CustomFieldType type;
-    private String options;
+    private List<CustomFieldOptionResponse> options;
 
-    public CustomFieldResponse(String projectKey, Long fieldNumber, String name,
-                               CustomFieldType type, String options) {
+    public CustomFieldResponse(String projectKey,
+                               Long fieldNumber,
+                               String name,
+                               CustomFieldType type,
+                               List<CustomFieldOptionResponse> options) {
         this.projectKey = projectKey;
         this.fieldNumber = fieldNumber;
         this.name = name;
@@ -35,7 +40,7 @@ public class CustomFieldResponse {
         return type;
     }
 
-    public String getOptions() {
+    public List<CustomFieldOptionResponse> getOptions() {
         return options;
     }
 }

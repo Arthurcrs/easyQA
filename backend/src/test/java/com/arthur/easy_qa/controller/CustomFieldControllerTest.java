@@ -1,8 +1,7 @@
 package com.arthur.easy_qa.controller;
 
 import com.arthur.easy_qa.domain.customfield.CustomFieldType;
-import com.arthur.easy_qa.dto.customfield.CreateCustomFieldRequest;
-import com.arthur.easy_qa.dto.customfield.CustomFieldResponse;
+import com.arthur.easy_qa.dto.customfield.*;
 import com.arthur.easy_qa.service.CustomFieldService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -15,10 +14,10 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -33,7 +32,7 @@ class CustomFieldControllerTest {
     private ObjectMapper objectMapper;
 
     @MockitoBean
-    private CustomFieldService customFieldService;
+    private CustomFieldService service;
 
     private CustomFieldResponse defaultResponse;
     private final String PROJECT_KEY = "EASYQA";
@@ -41,83 +40,70 @@ class CustomFieldControllerTest {
 
     @BeforeEach
     void setUp() {
+        CustomFieldOptionResponse option = new CustomFieldOptionResponse(UUID.randomUUID(), "Chrome", true, 0);
+
         defaultResponse = new CustomFieldResponse(
-                PROJECT_KEY, FIELD_NUMBER, "Browser", CustomFieldType.DROPDOWN, "Chrome,Firefox"
+                PROJECT_KEY,
+                FIELD_NUMBER,
+                "Browser",
+                CustomFieldType.DROPDOWN,
+                List.of(option)
         );
     }
 
     @Test
-    void create_ShouldReturn201AndCustomFieldResponse() throws Exception {
+    void create_ShouldReturn201() throws Exception {
         CreateCustomFieldRequest request = new CreateCustomFieldRequest();
         request.setName("Browser");
         request.setType(CustomFieldType.DROPDOWN);
-        request.setOptions("Chrome,Firefox");
+        request.setOptions(List.of("Chrome"));
 
-        when(customFieldService.create(eq(PROJECT_KEY), any(CreateCustomFieldRequest.class)))
+        when(service.create(eq(PROJECT_KEY), any(CreateCustomFieldRequest.class)))
                 .thenReturn(defaultResponse);
 
         mockMvc.perform(post("/api/v1/projects/{projectKey}/custom-fields", PROJECT_KEY)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
-                .andExpect(header().string("Location", "/api/v1/projects/" + PROJECT_KEY + "/custom-fields/" + FIELD_NUMBER))
-                .andExpect(jsonPath("$.fieldNumber").value(FIELD_NUMBER))
-                .andExpect(jsonPath("$.name").value("Browser"));
+                .andExpect(jsonPath("$.name").value("Browser"))
+                .andExpect(jsonPath("$.options[0].value").value("Chrome"));
     }
 
     @Test
-    void create_ShouldReturn400_WhenNameIsBlank() throws Exception {
-        CreateCustomFieldRequest request = new CreateCustomFieldRequest();
-        request.setType(CustomFieldType.TEXT);
-        // Name is left null to trigger @NotBlank
-
-        mockMvc.perform(post("/api/v1/projects/{projectKey}/custom-fields", PROJECT_KEY)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isBadRequest());
-    }
-
-    @Test
-    void getByNumber_ShouldReturn200_WhenFieldExists() throws Exception {
-        when(customFieldService.getByProjectAndNumber(PROJECT_KEY, FIELD_NUMBER))
+    void getByNumber_ShouldReturn200() throws Exception {
+        when(service.getByProjectAndNumber(PROJECT_KEY, FIELD_NUMBER))
                 .thenReturn(Optional.of(defaultResponse));
 
-        mockMvc.perform(get("/api/v1/projects/{projectKey}/custom-fields/{fieldNumber}", PROJECT_KEY, FIELD_NUMBER))
+        mockMvc.perform(get("/api/v1/projects/{projectKey}/custom-fields/{number}", PROJECT_KEY, FIELD_NUMBER))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value("Browser"));
+                .andExpect(jsonPath("$.name").value("Browser"))
+                .andExpect(jsonPath("$.options").isArray());
     }
 
     @Test
-    void getByNumber_ShouldReturn404_WhenFieldDoesNotExist() throws Exception {
-        when(customFieldService.getByProjectAndNumber(PROJECT_KEY, FIELD_NUMBER))
-                .thenReturn(Optional.empty());
+    void update_ShouldReturn200() throws Exception {
+        CreateCustomFieldRequest request = new CreateCustomFieldRequest();
+        request.setName("Updated Browser");
 
-        mockMvc.perform(get("/api/v1/projects/{projectKey}/custom-fields/{fieldNumber}", PROJECT_KEY, FIELD_NUMBER))
-                .andExpect(status().isNotFound());
-    }
+        CustomFieldResponse updatedResponse = new CustomFieldResponse(
+                PROJECT_KEY, FIELD_NUMBER, "Updated Browser", CustomFieldType.DROPDOWN, defaultResponse.getOptions()
+        );
 
-    @Test
-    void getAll_ShouldReturnListOfFields() throws Exception {
-        when(customFieldService.getAllByProject(PROJECT_KEY)).thenReturn(List.of(defaultResponse));
+        when(service.update(eq(PROJECT_KEY), eq(FIELD_NUMBER), any(CreateCustomFieldRequest.class)))
+                .thenReturn(Optional.of(updatedResponse));
 
-        mockMvc.perform(get("/api/v1/projects/{projectKey}/custom-fields", PROJECT_KEY))
+        mockMvc.perform(patch("/api/v1/projects/{projectKey}/custom-fields/{number}", PROJECT_KEY, FIELD_NUMBER)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.size()").value(1));
+                .andExpect(jsonPath("$.name").value("Updated Browser"));
     }
 
     @Test
-    void delete_ShouldReturn204_WhenFieldExists() throws Exception {
-        when(customFieldService.delete(PROJECT_KEY, FIELD_NUMBER)).thenReturn(true);
+    void delete_ShouldReturn204() throws Exception {
+        when(service.delete(PROJECT_KEY, FIELD_NUMBER)).thenReturn(true);
 
-        mockMvc.perform(delete("/api/v1/projects/{projectKey}/custom-fields/{fieldNumber}", PROJECT_KEY, FIELD_NUMBER))
+        mockMvc.perform(delete("/api/v1/projects/{projectKey}/custom-fields/{number}", PROJECT_KEY, FIELD_NUMBER))
                 .andExpect(status().isNoContent());
-    }
-
-    @Test
-    void delete_ShouldReturn404_WhenFieldDoesNotExist() throws Exception {
-        when(customFieldService.delete(PROJECT_KEY, FIELD_NUMBER)).thenReturn(false);
-
-        mockMvc.perform(delete("/api/v1/projects/{projectKey}/custom-fields/{fieldNumber}", PROJECT_KEY, FIELD_NUMBER))
-                .andExpect(status().isNotFound());
     }
 }

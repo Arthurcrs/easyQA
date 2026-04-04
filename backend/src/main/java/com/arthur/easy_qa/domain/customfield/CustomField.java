@@ -5,6 +5,8 @@ import jakarta.persistence.*;
 import org.hibernate.annotations.UuidGenerator;
 
 import java.util.UUID;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "custom_fields")
@@ -29,18 +31,27 @@ public class CustomField {
     @Column(nullable = false)
     private CustomFieldType type;
 
-    @Column(length = 1000)
-    private String options;
+    @OneToMany(mappedBy = "customField", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<CustomFieldOption> optionList = new ArrayList<>();
 
     protected CustomField() {
     }
 
-    public CustomField(Project project, Long fieldNumber, String name, CustomFieldType type, String options) {
+    public CustomField(Project project, Long fieldNumber, String name, CustomFieldType type) {
         this.project = project;
         this.fieldNumber = fieldNumber;
         this.name = name;
         this.type = type;
-        this.options = options;
+    }
+
+    public void addOption(CustomFieldOption option) {
+        this.optionList.add(option);
+        option.setCustomField(this);
+    }
+
+    public void removeOption(CustomFieldOption option) {
+        this.optionList.remove(option);
+        option.setCustomField(null);
     }
 
     public UUID getId() {
@@ -71,11 +82,11 @@ public class CustomField {
         this.type = type;
     }
 
-    public String getOptions() {
-        return options;
+    public List<CustomFieldOption> getOptionList() {
+        return optionList;
     }
 
-    public void setOptions(String options) {
-        this.options = options;
+    public void setOptionList(List<CustomFieldOption> optionList) {
+        this.optionList = optionList;
     }
 }

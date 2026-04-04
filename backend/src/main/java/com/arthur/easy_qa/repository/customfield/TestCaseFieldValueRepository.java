@@ -18,4 +18,6 @@ public interface TestCaseFieldValueRepository {
     Optional<TestCaseFieldValue> findByTestCaseAndCustomField(TestCase testCase, CustomField customField);
 
     void deleteAllByTestCase(TestCase testCase);
+
+    void delete(TestCaseFieldValue fieldValue);
 }

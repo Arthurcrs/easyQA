@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/projects/{projectKey}/test-cases")
@@ -64,5 +65,19 @@ public class TestCaseController {
                                        @PathVariable("testCaseNumber") Long testCaseNumber) {
         boolean deleted = service.delete(projectKey, testCaseNumber);
         return deleted ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
+    }
+
+    @GetMapping("/{testCaseNumber}/custom-fields")
+    public ResponseEntity<Map<String, String>> getCustomFields(@PathVariable("projectKey") String projectKey,
+                                                               @PathVariable("testCaseNumber") Long testCaseNumber) {
+        return ResponseEntity.ok(service.getCustomFields(projectKey, testCaseNumber));
+    }
+
+    @PutMapping("/{testCaseNumber}/custom-fields")
+    public ResponseEntity<Void> updateCustomFields(@PathVariable("projectKey") String projectKey,
+                                                   @PathVariable("testCaseNumber") Long testCaseNumber,
+                                                   @RequestBody Map<Long, String> customFields) {
+        service.updateCustomFields(projectKey, testCaseNumber, customFields);
+        return ResponseEntity.ok().build();
     }
 }

@@ -4,6 +4,8 @@ import com.arthur.easy_qa.domain.customfield.CustomFieldType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
+import java.util.List;
+
 public class CreateCustomFieldRequest {
 
     @NotBlank(message = "Field name is required")
@@ -12,7 +14,7 @@ public class CreateCustomFieldRequest {
     @NotNull(message = "Field type is required")
     private CustomFieldType type;
 
-    private String options;
+    private List<String> options;
 
     public String getName() {
         return name;
@@ -30,11 +32,11 @@ public class CreateCustomFieldRequest {
         this.type = type;
     }
 
-    public String getOptions() {
+    public List<String> getOptions() {
         return options;
     }
 
-    public void setOptions(String options) {
+    public void setOptions(List<String> options) {
         this.options = options;
     }
 }

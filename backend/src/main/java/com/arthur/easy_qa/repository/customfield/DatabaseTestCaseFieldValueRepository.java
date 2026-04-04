@@ -43,4 +43,9 @@ public class DatabaseTestCaseFieldValueRepository implements TestCaseFieldValueR
     public void deleteAllByTestCase(TestCase testCase) {
         jpaRepository.deleteAllByTestCase(testCase);
     }
+
+    @Override
+    public void delete(TestCaseFieldValue fieldValue) {
+        jpaRepository.delete(fieldValue);
+    }
 }

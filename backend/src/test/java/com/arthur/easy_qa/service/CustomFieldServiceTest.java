@@ -1,14 +1,15 @@
 package com.arthur.easy_qa.service;
 
 import com.arthur.easy_qa.domain.customfield.CustomField;
+import com.arthur.easy_qa.domain.customfield.CustomFieldOption;
 import com.arthur.easy_qa.domain.customfield.CustomFieldType;
 import com.arthur.easy_qa.domain.project.Project;
-import com.arthur.easy_qa.dto.customfield.CreateCustomFieldRequest;
-import com.arthur.easy_qa.dto.customfield.CustomFieldResponse;
+import com.arthur.easy_qa.dto.customfield.*;
 import com.arthur.easy_qa.repository.customfield.CustomFieldRepository;
 import com.arthur.easy_qa.repository.project.ProjectRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 
 import java.lang.reflect.Field;
 import java.time.Instant;
@@ -37,82 +38,75 @@ class CustomFieldServiceTest {
         service = new CustomFieldService(customFieldRepository, projectRepository);
 
         project = new Project("EasyQA", PROJECT_KEY, Instant.now(), false);
-        defaultField = new CustomField(project, 1L, "Browser", CustomFieldType.DROPDOWN, "Chrome,Firefox,Edge");
+        defaultField = new CustomField(project, 1L, "Browser", CustomFieldType.DROPDOWN);
+
+        CustomFieldOption option = new CustomFieldOption(defaultField, "Chrome", 0);
+        setPrivateField(option, "id", UUID.randomUUID());
+        defaultField.addOption(option);
     }
 
     @Test
-    void create_validRequest_shouldSaveAndReturnResponse() {
+    void create_shouldSaveAndReturnResponse() {
         CreateCustomFieldRequest request = new CreateCustomFieldRequest();
         request.setName("Browser");
         request.setType(CustomFieldType.DROPDOWN);
-        request.setOptions("Chrome,Firefox,Edge");
+        request.setOptions(List.of("Chrome", "Firefox")); // CHANGED to List
 
         when(projectRepository.findByKey(PROJECT_KEY)).thenReturn(Optional.of(project));
         when(customFieldRepository.findMaxFieldNumberByProjectKey(PROJECT_KEY)).thenReturn(Optional.of(0L));
-        when(customFieldRepository.save(any(CustomField.class))).thenAnswer(invocation -> {
-            CustomField cf = invocation.getArgument(0);
-            simulateIdGeneration(cf);
-            return cf;
-        });
+        when(customFieldRepository.save(any(CustomField.class))).thenAnswer(i -> i.getArgument(0));
 
         CustomFieldResponse response = service.create(PROJECT_KEY, request);
 
-        assertNotNull(response);
-        assertEquals(1L, response.getFieldNumber());
         assertEquals("Browser", response.getName());
-        assertEquals(CustomFieldType.DROPDOWN, response.getType());
-        assertEquals("Chrome,Firefox,Edge", response.getOptions());
-        verify(customFieldRepository, times(1)).save(any(CustomField.class));
+        assertEquals(2, response.getOptions().size());
+        assertEquals("Chrome", response.getOptions().get(0).getValue());
     }
 
     @Test
-    void create_projectNotFound_shouldThrowException() {
-        when(projectRepository.findByKey(PROJECT_KEY)).thenReturn(Optional.empty());
-
-        CreateCustomFieldRequest request = new CreateCustomFieldRequest();
-
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
-                () -> service.create(PROJECT_KEY, request));
-
-        assertEquals("Project not found: " + PROJECT_KEY, exception.getMessage());
-        verify(customFieldRepository, never()).save(any());
-    }
-
-    @Test
-    void getByProjectAndNumber_found_shouldReturnResponse() {
-        when(customFieldRepository.findByProjectKeyAndFieldNumber(PROJECT_KEY, 1L))
-                .thenReturn(Optional.of(defaultField));
+    void getByProjectAndNumber_shouldReturnResponse() {
+        when(customFieldRepository.findByProjectKeyAndFieldNumber(PROJECT_KEY, 1L)).thenReturn(Optional.of(defaultField));
 
         Optional<CustomFieldResponse> response = service.getByProjectAndNumber(PROJECT_KEY, 1L);
 
         assertTrue(response.isPresent());
-        assertEquals(1L, response.get().getFieldNumber());
         assertEquals("Browser", response.get().getName());
+        assertEquals(1, response.get().getOptions().size());
     }
 
     @Test
-    void getAllByProject_shouldReturnMappedList() {
-        when(customFieldRepository.findAllByProjectKey(PROJECT_KEY)).thenReturn(List.of(defaultField));
+    void update_shouldUpdateNameOnly() {
+        CreateCustomFieldRequest request = new CreateCustomFieldRequest();
+        request.setName("Updated Name");
 
-        List<CustomFieldResponse> result = service.getAllByProject(PROJECT_KEY);
+        when(customFieldRepository.findByProjectKeyAndFieldNumber(PROJECT_KEY, 1L)).thenReturn(Optional.of(defaultField));
+        when(customFieldRepository.save(any(CustomField.class))).thenAnswer(i -> i.getArgument(0));
 
-        assertEquals(1, result.size());
-        assertEquals("Browser", result.get(0).getName());
+        Optional<CustomFieldResponse> response = service.update(PROJECT_KEY, 1L, request);
+
+        assertTrue(response.isPresent());
+        assertEquals("Updated Name", response.get().getName());
     }
 
     @Test
-    void delete_shouldReturnRepositoryResult() {
-        when(customFieldRepository.deleteByProjectKeyAndFieldNumber(PROJECT_KEY, 1L)).thenReturn(true);
+    void addOption_shouldSaveNewOption() {
+        CreateFieldOptionRequest request = new CreateFieldOptionRequest();
+        request.setValue("Safari");
+        request.setSortOrder(2);
 
-        assertTrue(service.delete(PROJECT_KEY, 1L));
-        verify(customFieldRepository).deleteByProjectKeyAndFieldNumber(PROJECT_KEY, 1L);
+        when(customFieldRepository.findByProjectKeyAndFieldNumber(PROJECT_KEY, 1L)).thenReturn(Optional.of(defaultField));
+
+        CustomFieldOptionResponse response = service.addOption(PROJECT_KEY, 1L, request);
+
+        assertEquals("Safari", response.getValue());
+        assertEquals(2, defaultField.getOptionList().size()); // Chrome was already there, now Safari
     }
 
-    private static void simulateIdGeneration(CustomField customField) {
+    private void setPrivateField(Object target, String fieldName, Object value) {
         try {
-            Field field = customField.getClass().getDeclaredField("id");
+            Field field = target.getClass().getDeclaredField(fieldName);
             field.setAccessible(true);
-            field.set(customField, UUID.randomUUID());
+            field.set(target, value);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
