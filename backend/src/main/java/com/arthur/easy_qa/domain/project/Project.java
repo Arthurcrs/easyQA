@@ -1,14 +1,17 @@
 package com.arthur.easy_qa.domain.project;
 
+import com.arthur.easy_qa.domain.bug.Bug;
+import com.arthur.easy_qa.domain.customfield.CustomField;
+import com.arthur.easy_qa.domain.execution.Execution;
+import com.arthur.easy_qa.domain.testcase.TestCase;
+import com.arthur.easy_qa.domain.testcycle.TestCycle;
+import jakarta.persistence.*;
 import org.hibernate.annotations.UuidGenerator;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
-
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "projects")
@@ -23,6 +26,21 @@ public class Project {
     private String key;
     private Instant creationDate;
     private boolean archived;
+
+    @OneToMany(mappedBy = "project", cascade = CascadeType.REMOVE)
+    private List<TestCase> testCases = new ArrayList<>();
+
+    @OneToMany(mappedBy = "project", cascade = CascadeType.REMOVE)
+    private List<TestCycle> testCycles = new ArrayList<>();
+
+    @OneToMany(mappedBy = "project", cascade = CascadeType.REMOVE)
+    private List<Execution> executions = new ArrayList<>();
+
+    @OneToMany(mappedBy = "project", cascade = CascadeType.REMOVE)
+    private List<Bug> bugs = new ArrayList<>();
+
+    @OneToMany(mappedBy = "project", cascade = CascadeType.REMOVE)
+    private List<CustomField> customFields = new ArrayList<>();
 
     protected Project() {
     }

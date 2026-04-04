@@ -100,8 +100,15 @@ public class BugService {
                 });
     }
 
+    @Transactional
     public boolean delete(String projectKey, Long bugNumber) {
-        return bugRepository.deleteByProjectKeyAndBugNumber(projectKey, bugNumber);
+        return bugRepository.findByProjectKeyAndBugNumber(projectKey, bugNumber)
+                .map(bug -> {
+                    if (!bug.getLinkedExecutions().isEmpty()) {
+                        throw new IllegalStateException("Cannot delete bug: it is currently linked to one or more executions.");
+                    }
+                    return bugRepository.deleteByProjectKeyAndBugNumber(projectKey, bugNumber);
+                }).orElse(false);
     }
 
     private BugResponse toResponse(Bug bug) {

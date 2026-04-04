@@ -1,10 +1,13 @@
 package com.arthur.easy_qa.domain.testcycle;
 
+import com.arthur.easy_qa.domain.execution.Execution;
 import com.arthur.easy_qa.domain.project.Project;
 import jakarta.persistence.*;
 import org.hibernate.annotations.UuidGenerator;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -33,8 +36,11 @@ public class TestCycle {
     private Instant creationInstant;
     private Instant lastUpdateInstant;
 
+    @OneToMany(mappedBy = "testCycle", cascade = CascadeType.REMOVE)
+    private List<Execution> executions = new ArrayList<>();
+
     protected TestCycle() {
-    } // JPA requires default constructor
+    }
 
     public TestCycle(Project project, Long testCycleNumber, String name, String version, String environment, String type) {
         this.project = project;

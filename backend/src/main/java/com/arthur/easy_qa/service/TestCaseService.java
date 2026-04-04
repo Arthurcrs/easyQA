@@ -11,6 +11,7 @@ import com.arthur.easy_qa.repository.project.ProjectRepository;
 import com.arthur.easy_qa.repository.testcase.TestCaseRepository;
 import org.springframework.stereotype.Service;
 import com.arthur.easy_qa.domain.testcase.TestCaseFieldValue;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
@@ -99,8 +100,15 @@ public class TestCaseService {
                 });
     }
 
+    @Transactional
     public boolean delete(String projectKey, Long testCaseNumber) {
-        return testCaseRepository.deleteByProjectKeyAndTestCaseNumber(projectKey, testCaseNumber);
+        return testCaseRepository.findByProjectKeyAndTestCaseNumber(projectKey, testCaseNumber)
+                .map(testCase -> {
+                    if (!testCase.getExecutions().isEmpty()) {
+                        throw new IllegalStateException("Cannot delete test case: it has execution history in a test cycle.");
+                    }
+                    return testCaseRepository.deleteByProjectKeyAndTestCaseNumber(projectKey, testCaseNumber);
+                }).orElse(false);
     }
 
     private void saveCustomFields(String projectKey, TestCase testCase, Map<Long, String> customFields) {

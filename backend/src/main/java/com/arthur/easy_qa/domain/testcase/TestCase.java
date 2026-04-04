@@ -1,10 +1,13 @@
 package com.arthur.easy_qa.domain.testcase;
 
+import com.arthur.easy_qa.domain.execution.Execution;
 import com.arthur.easy_qa.domain.project.Project;
 import jakarta.persistence.*;
 import org.hibernate.annotations.UuidGenerator;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -39,6 +42,12 @@ public class TestCase {
 
     private Instant creationInstant;
     private Instant lastUpdateInstant;
+
+    @OneToMany(mappedBy = "testCase", cascade = CascadeType.REMOVE)
+    private List<TestCaseFieldValue> customFieldValues = new ArrayList<>();
+
+    @OneToMany(mappedBy = "testCase", cascade = CascadeType.REMOVE)
+    private List<Execution> executions = new ArrayList<>();
 
     protected TestCase() {
     }
@@ -159,5 +168,9 @@ public class TestCase {
 
     public Instant getLastUpdateInstant() {
         return lastUpdateInstant;
+    }
+
+    public List<Execution> getExecutions() {
+        return executions;
     }
 }
