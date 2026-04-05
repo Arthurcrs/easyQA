@@ -98,7 +98,7 @@ class BugControllerTest {
         mockMvc.perform(get("/api/v1/projects/{projectKey}/bugs/{bugNumber}", PROJECT_KEY, BUG_NUMBER))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.title").value("Login crashes"))
-                .andExpect(jsonPath("$.linkedExecutions").isArray()); // Verify the new array is present
+                .andExpect(jsonPath("$.linkedExecutions").isArray());
     }
 
     @Test

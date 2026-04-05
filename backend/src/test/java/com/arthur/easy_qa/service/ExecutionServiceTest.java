@@ -29,7 +29,7 @@ class ExecutionServiceTest {
 
     private ExecutionRepository executionRepository;
     private TestCycleRepository testCycleRepository;
-    private BugRepository bugRepository; // NEW MOCK
+    private BugRepository bugRepository;
     private ExecutionService service;
 
     private final String PROJECT_KEY = "EASYQA";

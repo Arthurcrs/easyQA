@@ -75,7 +75,7 @@ public class Bug {
         if ((this.status == BugStatus.CLOSED || this.status == BugStatus.RESOLVED) && this.closeDate == null) {
             this.closeDate = Instant.now();
         } else if (this.status != BugStatus.CLOSED && this.status != BugStatus.RESOLVED) {
-            this.closeDate = null; // Re-opens the bug if status changes back
+            this.closeDate = null;
         }
     }
 

@@ -15,7 +15,6 @@ public interface BugRepository {
 
     List<Bug> findAllByProjectKey(String projectKey);
 
-    // For optional filtering
     List<Bug> findAllByProjectKeyAndFilters(String projectKey, BugStatus status, BugSeverity severity);
 
     boolean deleteByProjectKeyAndBugNumber(String projectKey, Long bugNumber);

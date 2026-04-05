@@ -9,7 +9,6 @@ import com.arthur.easy_qa.repository.customfield.CustomFieldRepository;
 import com.arthur.easy_qa.repository.project.ProjectRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
 
 import java.lang.reflect.Field;
 import java.time.Instant;
@@ -50,7 +49,7 @@ class CustomFieldServiceTest {
         CreateCustomFieldRequest request = new CreateCustomFieldRequest();
         request.setName("Browser");
         request.setType(CustomFieldType.DROPDOWN);
-        request.setOptions(List.of("Chrome", "Firefox")); // CHANGED to List
+        request.setOptions(List.of("Chrome", "Firefox"));
 
         when(projectRepository.findByKey(PROJECT_KEY)).thenReturn(Optional.of(project));
         when(customFieldRepository.findMaxFieldNumberByProjectKey(PROJECT_KEY)).thenReturn(Optional.of(0L));
@@ -99,7 +98,7 @@ class CustomFieldServiceTest {
         CustomFieldOptionResponse response = service.addOption(PROJECT_KEY, 1L, request);
 
         assertEquals("Safari", response.getValue());
-        assertEquals(2, defaultField.getOptionList().size()); // Chrome was already there, now Safari
+        assertEquals(2, defaultField.getOptionList().size());
     }
 
     private void setPrivateField(Object target, String fieldName, Object value) {
