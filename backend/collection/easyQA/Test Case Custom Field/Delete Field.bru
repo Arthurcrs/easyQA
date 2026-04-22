@@ -1,0 +1,15 @@
+meta {
+  name: Delete Field
+  type: http
+  seq: 8
+}
+
+delete {
+  url: {{baseUrl}}/api/v1/projects/{{projectKey}}/custom-fields/{{fieldNumber}}
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+}

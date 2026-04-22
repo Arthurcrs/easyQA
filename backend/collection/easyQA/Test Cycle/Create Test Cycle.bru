@@ -1,0 +1,29 @@
+meta {
+  name: Create Test Cycle
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/v1/projects/{{projectKey}}/test-cycles
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "name": "S13CT01 - Busca de um reclamante no sistema",
+    "version": "N/A",
+    "environment": "DREADs",
+    "type": "Validação de HU"
+  }
+}
+
+script:post-response {
+  bru.setEnvVar("testCycleNumber", res.getBody().testCycleNumber);
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

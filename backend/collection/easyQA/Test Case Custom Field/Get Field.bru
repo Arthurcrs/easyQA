@@ -1,0 +1,15 @@
+meta {
+  name: Get Field
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/v1/projects/{{projectKey}}/custom-fields/{{fieldNumber}}
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+}

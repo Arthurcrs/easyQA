@@ -1,0 +1,16 @@
+meta {
+  name: Link bug to execution
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{baseUrl}}/api/v1/projects/{{projectKey}}/executions/1/bugs/{{bugNumber}}
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

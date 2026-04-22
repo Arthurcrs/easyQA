@@ -1,0 +1,15 @@
+meta {
+  name: Get Bug
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/v1/projects/{{projectKey}}/bugs/{{bugNumber}}
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+}

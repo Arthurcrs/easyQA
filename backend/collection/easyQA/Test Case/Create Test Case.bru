@@ -1,0 +1,32 @@
+meta {
+  name: Create Test Case
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/v1/projects/{{projectKey}}/test-cases
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "us": "Busca de um reclamante no sistema",
+    "feature": "Busca de um reclamante no sistema",
+    "scenario": "Botão Procurar desabilitado quando campos obrigatórios não estão preenchidos",
+    "description": "Dado que estou na tela de Busca por reclamante...",
+    "priority": "MEDIUM",
+    "type": "FUNCTIONAL",
+    "status": "FINISHED"
+  }
+}
+
+script:post-response {
+  bru.setEnvVar("testCaseNumber", res.getBody().testCaseNumber);
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

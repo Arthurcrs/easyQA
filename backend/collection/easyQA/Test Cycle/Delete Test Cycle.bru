@@ -1,0 +1,16 @@
+meta {
+  name: Delete Test Cycle
+  type: http
+  seq: 2
+}
+
+delete {
+  url: {{baseUrl}}/api/v1/projects/{{projectKey}}/test-cycles/{{testCycleNumber}}
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
