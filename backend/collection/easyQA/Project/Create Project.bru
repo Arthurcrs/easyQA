@@ -1,0 +1,26 @@
+meta {
+  name: Create Project
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/v1/projects
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "name": "BNB D10"
+  }
+}
+
+script:post-response {
+  bru.setEnvVar("projectKey", res.getBody().key);
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

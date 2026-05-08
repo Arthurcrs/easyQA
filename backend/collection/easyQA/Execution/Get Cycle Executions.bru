@@ -1,0 +1,23 @@
+meta {
+  name: Get Cycle Executions
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/projects/{{projectKey}}/test-cycles/{{testCycleNumber}}/executions
+  body: none
+  auth: inherit
+}
+
+script:post-response {
+  // The first execution to be used for testing
+  if(res.getBody().length > 0) {
+      bru.setEnvVar("executionNumber", res.getBody()[0].executionNumber);
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

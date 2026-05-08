@@ -1,0 +1,23 @@
+meta {
+  name: Add Field Option
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/v1/projects/{{projectKey}}/custom-fields/{{customFieldNumber}}/options
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "value": "Windows 11",
+    "sortOrder": 1
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

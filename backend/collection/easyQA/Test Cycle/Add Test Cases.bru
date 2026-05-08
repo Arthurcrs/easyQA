@@ -1,0 +1,22 @@
+meta {
+  name: Add Test Cases
+  type: http
+  seq: 7
+}
+
+post {
+  url: {{baseUrl}}/api/v1/projects/{{projectKey}}/test-cycles/{{testCycleNumber}}/test-cases
+  body: json
+  auth: inherit
+}
+
+body:json {
+  [
+    {{testCaseNumber}}
+  ]
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

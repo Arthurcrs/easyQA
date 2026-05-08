@@ -1,0 +1,16 @@
+meta {
+  name: Delete Test Case
+  type: http
+  seq: 3
+}
+
+delete {
+  url: {baseUrl}}/api/v1/projects/{{projectKey}}/test-cases/{{testCaseNumber}}
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

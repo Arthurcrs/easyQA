@@ -1,0 +1,22 @@
+meta {
+  name: Update Custom Fields
+  type: http
+  seq: 7
+}
+
+get {
+  url: {{baseUrl}}/api/v1/projects/{{projectKey}}/test-cases/{{testCaseNumber}}/custom-fields
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "1": "Windows 11"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

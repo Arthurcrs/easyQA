@@ -1,0 +1,15 @@
+meta {
+  name: Get All Test Cases
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/v1/projects/{{projectKey}}/test-cases
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+}

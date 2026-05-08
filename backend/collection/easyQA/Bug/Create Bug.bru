@@ -1,0 +1,33 @@
+meta {
+  name: Create Bug
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/v1/projects/{{projectKey}}/bugs
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "title": "Botão Procurar é habilitado quando as datas não são inseridas",
+    "description": "",
+    "severity": "MEDIUM",
+    "status": "OPEN"
+  }
+}
+
+vars:post-response {
+  bugNumber: 
+}
+
+script:post-response {
+  bru.setEnvVar("bugNumber", res.getBody().bugNumber);
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

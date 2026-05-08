@@ -1,0 +1,15 @@
+meta {
+  name: Get Test Cycle
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/v1/projects/{{projectKey}}/test-cycles/{{testCycleNumber}}
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+}

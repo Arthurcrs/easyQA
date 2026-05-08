@@ -1,0 +1,24 @@
+meta {
+  name: Update Option
+  type: http
+  seq: 6
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/projects/{{projectKey}}/custom-fields/{{fieldNumber}}/options/{{optionId}}
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "value": "Android 14",
+    "sortOrder": 4,
+    "active": true
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

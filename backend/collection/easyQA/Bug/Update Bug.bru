@@ -1,0 +1,25 @@
+meta {
+  name: Update Bug
+  type: http
+  seq: 5
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/projects/{{projectKey}}/bugs/{{bugNumber}}
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "title": "Botão Procurar é habilitado quando as datas não são inseridas",
+    "description": "",
+    "severity": "MEDIUM",
+    "status": "OPEN"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

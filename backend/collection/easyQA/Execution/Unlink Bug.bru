@@ -1,0 +1,15 @@
+meta {
+  name: Unlink Bug
+  type: http
+  seq: 5
+}
+
+delete {
+  url: {{baseUrl}}/api/v1/projects/{{projectKey}}/executions/{{executionNumber}}/bugs/{{bugNumber}}
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+}

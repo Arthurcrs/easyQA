@@ -1,0 +1,16 @@
+meta {
+  name: Delete Option
+  type: http
+  seq: 7
+}
+
+delete {
+  url: {{baseUrl}}/api/v1/projects/{{projectKey}}/custom-fields/{{fieldNumber}}/options/{{optionId}}
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

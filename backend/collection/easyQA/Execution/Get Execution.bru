@@ -1,0 +1,15 @@
+meta {
+  name: Get Execution
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/v1/projects/{{projectKey}}/executions/{{executionNumber}}
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+}

@@ -1,0 +1,27 @@
+meta {
+  name: Create Custom Field
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/v1/projects/{{projectKey}}/custom-fields
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "name": "OS",
+    "type": "DROPDOWN"
+  }
+}
+
+script:post-response {
+  bru.setEnvVar("customFieldNumber", res.getBody().fieldNumber);
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

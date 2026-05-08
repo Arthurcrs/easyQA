@@ -1,7 +1,10 @@
 package com.arthur.easy_qa.controller;
 
-import com.arthur.easy_qa.dto.CreateTestCaseRequest;
-import com.arthur.easy_qa.dto.TestCaseResponse;
+import com.arthur.easy_qa.domain.testcase.TestCasePriority;
+import com.arthur.easy_qa.domain.testcase.TestCaseStatus;
+import com.arthur.easy_qa.domain.testcase.TestCaseType;
+import com.arthur.easy_qa.dto.testcase.CreateTestCaseRequest;
+import com.arthur.easy_qa.dto.testcase.TestCaseResponse;
 import com.arthur.easy_qa.service.TestCaseService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -9,10 +12,10 @@ import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
 import java.util.List;
-import java.util.UUID;
+import java.util.Map;
 
 @RestController
-@RequestMapping("/api/v1/test-cases")
+@RequestMapping("/api/v1/projects/{projectKey}/test-cases")
 public class TestCaseController {
 
     private final TestCaseService service;
@@ -22,36 +25,59 @@ public class TestCaseController {
     }
 
     @PostMapping
-    public ResponseEntity<TestCaseResponse> create(@Valid @RequestBody CreateTestCaseRequest request) {
-        TestCaseResponse response = service.create(request);
+    public ResponseEntity<TestCaseResponse> create(@PathVariable("projectKey") String projectKey,
+                                                   @Valid @RequestBody CreateTestCaseRequest request) {
+        TestCaseResponse response = service.create(projectKey, request);
         return ResponseEntity
-                .created(URI.create("/api/v1/test-cases/" + response.getId()))
+                .created(URI.create(String.format("/api/v1/projects/%s/test-cases/%d", projectKey, response.getTestCaseNumber())))
                 .body(response);
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<TestCaseResponse> getById(@PathVariable("id") UUID id) {
-        return service.getById(id)
+    @GetMapping("/{testCaseNumber}")
+    public ResponseEntity<TestCaseResponse> getByNumber(@PathVariable("projectKey") String projectKey,
+                                                        @PathVariable("testCaseNumber") Long testCaseNumber) {
+        return service.getByProjectAndNumber(projectKey, testCaseNumber)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @GetMapping
-    public ResponseEntity<List<TestCaseResponse>> getAll() {
-        return ResponseEntity.ok(service.getAll());
+    public ResponseEntity<List<TestCaseResponse>> getAll(
+            @PathVariable("projectKey") String projectKey,
+            @RequestParam(value = "status", required = false) TestCaseStatus status,
+            @RequestParam(value = "type", required = false) TestCaseType type,
+            @RequestParam(value = "priority", required = false) TestCasePriority priority,
+            @RequestParam(value = "q", required = false) String q) {
+        return ResponseEntity.ok(service.getAllByProject(projectKey, status, type, priority, q));
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<TestCaseResponse> update(@PathVariable("id") UUID id,
+    @PatchMapping("/{testCaseNumber}")
+    public ResponseEntity<TestCaseResponse> update(@PathVariable("projectKey") String projectKey,
+                                                   @PathVariable("testCaseNumber") Long testCaseNumber,
                                                    @Valid @RequestBody CreateTestCaseRequest request) {
-        return service.update(id, request)
+        return service.update(projectKey, testCaseNumber, request)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable("id") UUID id) {
-        boolean deleted = service.delete(id);
+    @DeleteMapping("/{testCaseNumber}")
+    public ResponseEntity<Void> delete(@PathVariable("projectKey") String projectKey,
+                                       @PathVariable("testCaseNumber") Long testCaseNumber) {
+        boolean deleted = service.delete(projectKey, testCaseNumber);
         return deleted ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
+    }
+
+    @GetMapping("/{testCaseNumber}/custom-fields")
+    public ResponseEntity<Map<String, String>> getCustomFields(@PathVariable("projectKey") String projectKey,
+                                                               @PathVariable("testCaseNumber") Long testCaseNumber) {
+        return ResponseEntity.ok(service.getCustomFields(projectKey, testCaseNumber));
+    }
+
+    @PutMapping("/{testCaseNumber}/custom-fields")
+    public ResponseEntity<Void> updateCustomFields(@PathVariable("projectKey") String projectKey,
+                                                   @PathVariable("testCaseNumber") Long testCaseNumber,
+                                                   @RequestBody Map<Long, String> customFields) {
+        service.updateCustomFields(projectKey, testCaseNumber, customFields);
+        return ResponseEntity.ok().build();
     }
 }

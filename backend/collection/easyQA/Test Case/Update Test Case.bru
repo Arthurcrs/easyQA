@@ -1,0 +1,28 @@
+meta {
+  name: Update Test Case
+  type: http
+  seq: 2
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/projects/{{projectKey}}/test-cases/{{testCaseNumber}}
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "us": "Busca de um reclamante no sistema UPDATED",
+    "feature": "Busca de um reclamante no sistema",
+    "scenario": "Botão Procurar desabilitado quando campos obrigatórios não estão preenchidos",
+    "description": "Dado que estou na tela de Busca por reclamante...",
+    "priority": "MEDIUM",
+    "type": "FUNCTIONAL",
+    "status": "FINISHED"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

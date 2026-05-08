@@ -1,0 +1,23 @@
+meta {
+  name: Update Field
+  type: http
+  seq: 5
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/projects/{{projectKey}}/custom-fields/{{fieldNumber}}
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "name": "Target OS",
+    "type": "DROPDOWN"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
